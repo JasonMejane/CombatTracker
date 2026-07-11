@@ -59,7 +59,7 @@ Once installed it runs offline; combat state is stored on the device.
 
 ### Prerequisites
 
-- Node.js 20+ and npm.
+- Node.js 24+ and npm.
 
 ### Setup
 
@@ -142,3 +142,23 @@ Creature {
 
 Older saved data is migrated on load — missing `conditions` / `tempHp` are
 backfilled with defaults.
+
+## Deploy
+
+This is a static Vite build with no backend, so any static host works. The
+repo includes a [`vercel.json`](vercel.json) for deploying to
+[Vercel](https://vercel.com/):
+
+```bash
+npm i -g vercel
+vercel        # first deploy, follow the prompts
+vercel --prod # promote to production
+```
+
+Or import the GitHub repo in the Vercel dashboard — it auto-detects the Vite
+framework preset, builds with `npm run build`, and serves the `dist/`
+directory.
+
+## License
+
+[GNU GPLv3](LICENSE).

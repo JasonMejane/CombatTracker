@@ -42,7 +42,10 @@
 
 <main>
   <header>
-    <h1>Combat Tracker</h1>
+    <div class="brand">
+      <img src="/favicon.svg" alt="" class="logo" width="32" height="32" />
+      <h1>Combat Tracker</h1>
+    </div>
     <div class="header-actions">
       <InstallButton />
       <button
@@ -87,6 +90,15 @@
     gap: 12px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo {
+    display: block;
+    border-radius: 6px;
   }
   h1 {
     margin: 0;
