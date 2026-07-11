@@ -1,0 +1,48 @@
+:root {
+  /* Dark tabletop palette */
+  --bg: #1a1410;
+  --surface: #241d17;
+  --surface-2: #2e251d;
+  --border: #3a2f24;
+  --text: #e8ddcf;
+  --text-muted: #a2917c;
+  --accent: #c9a227;
+
+  /* Combatant states */
+  --player: #2f5d3a;
+  --player-border: #4a8a5c;
+  --enemy: #6b2b2b;
+  --enemy-border: #a34242;
+  --active-glow: #c9a227;
+  --down: #4a423a;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 16px/1.45 var(--sans);
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
