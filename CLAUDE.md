@@ -26,7 +26,9 @@ Svelte 5 (runes) · Vite · vite-plugin-pwa · plain CSS · Vitest +
 Two layers, kept strictly apart:
 
 - **`src/lib/*.js` — pure logic, no Svelte.** Every function is non-mutating
-  (returns `{ ...creature, ... }`), small, and cyclomatic complexity < 4.
+  (returns `{ ...creature, ... }`), small, and cyclomatic complexity < 4. Functions
+  are **JSDoc-typed** against the shared `Creature` shape in `src/lib/types.js`
+  (`@typedef {import('./types.js').Creature}`); keep new lib functions annotated.
   - `creatures.js` — `createCreature` (armor class `ca` defaults to 10),
     `damage`/`heal`, `setTempHp`/`addTempHp`, `toggleCondition`, `setInitiative`,
     `setCa`, `addDeathSave`/`deathState`/`revive`, `isDown`, `sortByInitiative`,
@@ -81,8 +83,9 @@ click-to-edit inline pattern (commits on Enter/blur).
   let clear names carry the meaning.
 - **Tooling gate:** keep `npm run lint`, `npm run format:check` and `npm run check`
   green alongside `npm test`. ESLint enforces `complexity ≤ 4` on `src/` (off for
-  test files); Prettier owns formatting (don't hand-fight it); svelte-check runs
-  with `checkJs: false` (Svelte/type diagnostics, not strict plain-JS typing).
+  test files); Prettier owns formatting (don't hand-fight it); svelte-check runs with
+  `checkJs: true` and type-checks the app via the JSDoc `Creature` type (test files
+  excluded in `jsconfig`, so keep deliberately-partial fixtures in `*.test.js`).
 
 ## Data model
 

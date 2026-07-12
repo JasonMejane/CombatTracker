@@ -137,8 +137,11 @@ The project follows a test-driven approach. Pure logic
   (relaxed for test files). Run `npm run lint`.
 - **Prettier** (`.prettierrc.json`) owns formatting; `eslint-config-prettier` keeps ESLint
   out of its way. Run `npm run format` (write) or `npm run format:check` (verify).
-- **svelte-check** validates Svelte components, props and runes. Run `npm run check`.
-  (`jsconfig` has `checkJs: false`, so plain JS isn't strictly type-checked.)
+- **svelte-check** type-checks the app against the shared `Creature` type. The code
+  stays plain JS but `src/lib` is annotated with **JSDoc** (`src/lib/types.js` holds
+  the `@typedef`s), and `jsconfig` has `checkJs: true`. Test files are excluded — they
+  pass deliberately partial fixtures — so the suite, not the type-checker, is their
+  safety net. Run `npm run check`.
 
 ### Project structure
 
@@ -148,6 +151,7 @@ src/
   app.css                 # dark tabletop theme + shared tokens
   main.js                 # app entry
   lib/
+    types.js              # shared JSDoc typedefs (Creature, CreatureInput, …)
     creatures.js          # pure combat logic (sort, damage, heal, death saves,
                           #   conditions, temp HP, turn order, set initiative/CA)
     catalog.js            # pure catalog logic (create/edit/sort/filter templates,

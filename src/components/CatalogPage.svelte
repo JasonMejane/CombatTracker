@@ -54,7 +54,7 @@
   <AddCreatureForm {onAdd} showInitiative={false} />
 
   <footer class="catalog-footer">
-    <button class="delete-all" onclick={onClear} disabled={catalog.length === 0}>Delete all</button>
+    <button class="delete-all" onclick={() => onClear()} disabled={catalog.length === 0}>Delete all</button>
   </footer>
 </section>
 

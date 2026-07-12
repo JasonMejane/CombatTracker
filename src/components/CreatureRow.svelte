@@ -146,7 +146,7 @@
         <button class="hp-btn temp" aria-label="Add temp HP" title="Add temporary HP" onclick={() => applyAmount(onAddTemp)}>🛡</button>
       {/if}
       {#if downed}
-        <button class="revive-btn" aria-label="Revive" onclick={onRevive}>Revive</button>
+        <button class="revive-btn" aria-label="Revive" onclick={() => onRevive()}>Revive</button>
       {/if}
     </div>
   </div>

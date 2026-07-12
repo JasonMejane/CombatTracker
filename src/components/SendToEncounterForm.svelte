@@ -16,7 +16,7 @@
     <input type="number" bind:value={initiative} />
   </label>
   <button type="submit" class="send">Send</button>
-  <button type="button" class="cancel" onclick={onCancel}>Cancel</button>
+  <button type="button" class="cancel" onclick={() => onCancel()}>Cancel</button>
 </form>
 
 <style>

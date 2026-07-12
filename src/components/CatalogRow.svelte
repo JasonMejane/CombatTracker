@@ -84,7 +84,7 @@
 
     <div class="controls">
       <button class="send-btn" onclick={() => (showSend = true)}>Send to encounter</button>
-      <button class="remove-btn" aria-label="Remove" onclick={onRemove}>✕</button>
+      <button class="remove-btn" aria-label="Remove" onclick={() => onRemove()}>✕</button>
     </div>
   </div>
 

@@ -1,3 +1,11 @@
+/**
+ * @typedef {Object} Condition
+ * @property {string} key
+ * @property {string} label
+ * @property {string} emoji
+ */
+
+/** @type {Condition[]} */
 export const CONDITIONS = [
   { key: 'blinded', label: 'Blinded', emoji: '🙈' },
   { key: 'charmed', label: 'Charmed', emoji: '💘' },
@@ -18,10 +26,18 @@ export const CONDITIONS = [
 
 const byKey = new Map(CONDITIONS.map((c) => [c.key, c]))
 
+/**
+ * @param {string} key
+ * @returns {string}
+ */
 export function conditionEmoji(key) {
   return byKey.get(key)?.emoji ?? ''
 }
 
+/**
+ * @param {string} key
+ * @returns {string}
+ */
 export function conditionLabel(key) {
   return byKey.get(key)?.label ?? key
 }
