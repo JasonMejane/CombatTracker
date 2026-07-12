@@ -61,9 +61,12 @@ spawns a catalog creature into `creatures` (de-duplicating enemy names with
 `uniqueEnemyName`) and switches back to the encounter; the catalog copy is kept.
 
 Component tree: `App → CreatureList → CreatureRow → { HpBar, ConditionPicker }`,
-plus `AddCreatureForm` and `InstallButton` for the encounter, and
-`App → CatalogPage → CatalogRow → SendToEncounterForm` (reusing `AddCreatureForm`
-with `showInitiative={false}`) for the catalog. `CreatureList` owns the
+plus `AddCreatureRow` and `InstallButton` for the encounter, and
+`App → CatalogPage → CatalogRow → SendToEncounterForm` (with `AddCreatureRow`
+`showInitiative={false}`) for the catalog. `AddCreatureRow` is a disclosure that
+renders below each list: a collapsed `＋ Add creature` button that reveals the shared
+`AddCreatureForm` when clicked and auto-closes after a successful add (mirroring the
+`CreatureRow` `+ Add condition` → `ConditionPicker` pattern). `CreatureList` owns the
 `sortByInitiative` ordering; `CatalogPage` owns `sortByName` + `filterBySide`.
 Both `CreatureRow` (initiative + CA) and `CatalogRow` (HP + CA) use the same
 click-to-edit inline pattern (commits on Enter/blur).

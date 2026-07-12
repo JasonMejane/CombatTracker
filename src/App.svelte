@@ -1,6 +1,6 @@
 <script>
   import CreatureList from './components/CreatureList.svelte'
-  import AddCreatureForm from './components/AddCreatureForm.svelte'
+  import AddCreatureRow from './components/AddCreatureRow.svelte'
   import CatalogPage from './components/CatalogPage.svelte'
   import InstallButton from './components/InstallButton.svelte'
   import {
@@ -100,7 +100,7 @@
       onSetCa={handleSetCa}
     />
 
-    <AddCreatureForm onAdd={addCreature} />
+    <AddCreatureRow onAdd={addCreature} />
 
     <footer class="encounter-footer">
       <button
@@ -207,6 +207,9 @@
     display: flex;
     justify-content: center;
     padding: 12px 16px max(20px, env(safe-area-inset-bottom));
+    /* Absorb the spare height so the list + add-row hug the top and only this
+       footer sits at the bottom of the screen. */
+    margin-top: auto;
   }
   .new-encounter {
     padding: 10px 14px;
@@ -223,9 +226,6 @@
   .next-turn:disabled,
   .new-encounter:disabled {
     opacity: 0.4;
-  }
-  :global(.creature-list) {
-    flex: 1;
   }
 
   /* Tablet and up: keep the two tabs from stretching edge-to-edge. */

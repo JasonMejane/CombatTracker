@@ -82,8 +82,10 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin: 0 12px 12px;
     padding: 12px 16px;
-    border-top: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
     background: var(--surface);
   }
   /* Numeric fields spread evenly across the width (auto-fit collapses spare tracks

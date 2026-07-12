@@ -36,6 +36,7 @@ describe('CatalogPage', () => {
   it('adds a creature through the form with initiative hidden', async () => {
     const onAdd = vi.fn()
     render(CatalogPage, { catalog: [], onAdd })
+    await fireEvent.click(screen.getByRole('button', { name: /add creature/i }))
     expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
     await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: 'Goblin' } })
     await fireEvent.input(screen.getByLabelText('HP'), { target: { value: '7' } })

@@ -130,7 +130,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
+    /* Keep room for the name + CA badge so the group never collapses (which would
+       overlap the HP badge); the controls wrap to a new line instead. */
+    min-width: 7rem;
   }
   .name {
     font-weight: 600;

@@ -1,5 +1,5 @@
 <script>
-  import AddCreatureForm from './AddCreatureForm.svelte'
+  import AddCreatureRow from './AddCreatureRow.svelte'
   import CatalogRow from './CatalogRow.svelte'
   import { sortByName, filterBySide } from '../lib/catalog.js'
 
@@ -51,7 +51,7 @@
     </ul>
   {/if}
 
-  <AddCreatureForm {onAdd} showInitiative={false} />
+  <AddCreatureRow {onAdd} showInitiative={false} />
 
   <footer class="catalog-footer">
     <button class="delete-all" onclick={() => onClear()} disabled={catalog.length === 0}>Delete all</button>
@@ -90,7 +90,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex: 1;
   }
   .empty {
     flex: 1;
@@ -102,6 +101,9 @@
     display: flex;
     justify-content: center;
     padding: 12px 16px max(20px, env(safe-area-inset-bottom));
+    /* Absorb the spare height so the list + add-row hug the top and only this
+       footer sits at the bottom of the screen. */
+    margin-top: auto;
   }
   .delete-all {
     padding: 10px 14px;

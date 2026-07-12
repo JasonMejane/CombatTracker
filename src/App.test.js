@@ -6,6 +6,7 @@ beforeEach(() => localStorage.clear())
 afterEach(() => vi.restoreAllMocks())
 
 async function addCombatant({ name, hp, initiative, enemy = false }) {
+  await fireEvent.click(screen.getByRole('button', { name: /add creature/i }))
   await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: name } })
   await fireEvent.input(screen.getByLabelText('HP'), { target: { value: String(hp) } })
   await fireEvent.input(screen.getByLabelText(/initiative/i), {
@@ -135,6 +136,7 @@ describe('App', () => {
 })
 
 async function addToCatalog({ name, hp, enemy = false }) {
+  await fireEvent.click(screen.getByRole('button', { name: /add creature/i }))
   await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: name } })
   await fireEvent.input(screen.getByLabelText('HP'), { target: { value: String(hp) } })
   if (enemy) await fireEvent.click(screen.getByLabelText(/enemy/i))
