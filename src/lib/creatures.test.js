@@ -12,6 +12,8 @@ import {
   toggleCondition,
   setTempHp,
   addTempHp,
+  setInitiative,
+  setCa,
 } from './creatures.js'
 
 describe('createCreature', () => {
@@ -56,6 +58,34 @@ describe('createCreature', () => {
   it('starts with no temporary HP', () => {
     const c = createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true })
     expect(c.tempHp).toBe(0)
+  })
+
+  it('stores the given armor class', () => {
+    const c = createCreature({ name: 'Knight', hp: 10, initiative: 5, isPlayer: true, ca: 18 })
+    expect(c.ca).toBe(18)
+  })
+
+  it('defaults armor class to 10 when not provided', () => {
+    const c = createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true })
+    expect(c.ca).toBe(10)
+  })
+})
+
+describe('setCa', () => {
+  const base = () => createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true, ca: 12 })
+
+  it('sets the armor class to the given number', () => {
+    expect(setCa(base(), 16).ca).toBe(16)
+  })
+
+  it('coerces a numeric string', () => {
+    expect(setCa(base(), '15').ca).toBe(15)
+  })
+
+  it('does not mutate the input creature', () => {
+    const c = base()
+    setCa(c, 16)
+    expect(c.ca).toBe(12)
   })
 })
 
@@ -281,6 +311,24 @@ describe('nextActiveId', () => {
 
   it('returns null for an empty list', () => {
     expect(nextActiveId([], null)).toBe(null)
+  })
+})
+
+describe('setInitiative', () => {
+  const base = () => createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true })
+
+  it('sets the initiative to the given number', () => {
+    expect(setInitiative(base(), 18).initiative).toBe(18)
+  })
+
+  it('coerces a numeric string', () => {
+    expect(setInitiative(base(), '12').initiative).toBe(12)
+  })
+
+  it('does not mutate the input creature', () => {
+    const c = base()
+    setInitiative(c, 18)
+    expect(c.initiative).toBe(5)
   })
 })
 

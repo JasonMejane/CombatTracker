@@ -1,18 +1,22 @@
 <script>
-  let { onAdd } = $props()
+  let { onAdd, showInitiative = true } = $props()
 
   let name = $state('')
   let hp = $state('')
   let maxHp = $state('')
+  let ca = $state('')
   let initiative = $state('')
   let isPlayer = $state(true)
 
-  const isValid = $derived(name.trim() !== '' && hp !== '' && initiative !== '')
+  const isValid = $derived(
+    name.trim() !== '' && hp !== '' && (!showInitiative || initiative !== ''),
+  )
 
   function reset() {
     name = ''
     hp = ''
     maxHp = ''
+    ca = ''
     initiative = ''
     isPlayer = true
   }
@@ -20,8 +24,10 @@
   function handleSubmit(event) {
     event.preventDefault()
     if (!isValid) return
-    const creature = { name: name.trim(), hp: Number(hp), initiative: Number(initiative), isPlayer }
+    const creature = { name: name.trim(), hp: Number(hp), isPlayer }
+    if (showInitiative) creature.initiative = Number(initiative)
     if (maxHp !== '') creature.maxHp = Number(maxHp)
+    if (ca !== '') creature.ca = Number(ca)
     onAdd(creature)
     reset()
   }
@@ -44,9 +50,16 @@
   </div>
 
   <div class="field">
-    <label for="initiative">Initiative</label>
-    <input id="initiative" type="number" bind:value={initiative} />
+    <label for="ca">CA</label>
+    <input id="ca" type="number" min="0" placeholder="10" bind:value={ca} />
   </div>
+
+  {#if showInitiative}
+    <div class="field">
+      <label for="initiative">Initiative</label>
+      <input id="initiative" type="number" bind:value={initiative} />
+    </div>
+  {/if}
 
   <fieldset class="side">
     <legend>Side</legend>

@@ -13,10 +13,51 @@
     onRevive = () => {},
     onToggleCondition = () => {},
     onAddTemp = () => {},
+    onSetInitiative = () => {},
+    onSetCa = () => {},
   } = $props()
 
   let amount = $state(1)
   let showConditions = $state(false)
+  let editingInitiative = $state(false)
+  let initiativeDraft = $state(0)
+  let editingCa = $state(false)
+  let caDraft = $state(0)
+
+  function startEditInitiative() {
+    initiativeDraft = creature.initiative
+    editingInitiative = true
+  }
+
+  function commitInitiative() {
+    if (!editingInitiative) return
+    editingInitiative = false
+    onSetInitiative(Number(initiativeDraft))
+  }
+
+  function onInitiativeKey(event) {
+    if (event.key === 'Enter') commitInitiative()
+  }
+
+  function startEditCa() {
+    caDraft = creature.ca
+    editingCa = true
+  }
+
+  function commitCa() {
+    if (!editingCa) return
+    editingCa = false
+    onSetCa(Number(caDraft))
+  }
+
+  function onCaKey(event) {
+    if (event.key === 'Enter') commitCa()
+  }
+
+  function focusOnMount(node) {
+    node.focus()
+    node.select()
+  }
 
   const state = $derived(deathState(creature))
   const downed = $derived(isDown(creature))
@@ -39,46 +80,81 @@
   class:active={isActive}
   class:down={greyed}
 >
-  <span class="initiative">{creature.initiative}</span>
-  <div class="name-group">
-    <span class="name">{creature.name}</span>
-    {#each creature.conditions as key (key)}
-      <span class="cond-emoji" title={conditionLabel(key)}>{conditionEmoji(key)}</span>
-    {/each}
-    <button
-      class="cond-toggle"
-      aria-label="Add condition"
-      aria-expanded={showConditions}
-      onclick={() => (showConditions = !showConditions)}>+</button
-    >
-  </div>
-
-  {#if showDeathSaves}
-    <div class="death-saves" data-testid="death-saves">
-      {#if state === 'dead'}
-        <span class="death-label">Dead</span>
-      {:else if state === 'stable'}
-        <span class="death-label">Stable</span>
-      {/if}
-      <div class="pips successes">
-        {#each pips as n}
-          <span class="pip success" class:filled={creature.deathSaves.successes >= n}></span>
-        {/each}
-      </div>
-      <div class="pips failures">
-        {#each pips as n}
-          <span class="pip failure" class:filled={creature.deathSaves.failures >= n}></span>
-        {/each}
-      </div>
-    </div>
+  {#if editingInitiative}
+    <input
+      class="initiative-input"
+      type="number"
+      aria-label="Initiative"
+      bind:value={initiativeDraft}
+      onblur={commitInitiative}
+      onkeydown={onInitiativeKey}
+      use:focusOnMount
+    />
   {:else}
-    <HpBar current={creature.currentHp} max={creature.maxHp} temp={creature.tempHp} variant={hpVariant} />
+    <button class="initiative" title="Edit initiative" onclick={startEditInitiative}
+      >{creature.initiative}</button
+    >
   {/if}
+  <span class="name">{creature.name}</span>
+
+  {#if editingCa}
+    <input
+      class="ca-input"
+      type="number"
+      aria-label="CA"
+      bind:value={caDraft}
+      onblur={commitCa}
+      onkeydown={onCaKey}
+      use:focusOnMount
+    />
+  {:else}
+    <button class="ca" title="Edit armor class" onclick={startEditCa}>CA {creature.ca}</button>
+  {/if}
+
+  <div class="hp-column">
+    <div class="hp-slot">
+      {#if showDeathSaves}
+        <div class="death-saves" data-testid="death-saves">
+          {#if state === 'dead'}
+            <span class="death-label">Dead</span>
+          {:else if state === 'stable'}
+            <span class="death-label">Stable</span>
+          {/if}
+          <div class="pips successes">
+            {#each pips as n}
+              <span class="pip success" class:filled={creature.deathSaves.successes >= n}></span>
+            {/each}
+          </div>
+          <div class="pips failures">
+            {#each pips as n}
+              <span class="pip failure" class:filled={creature.deathSaves.failures >= n}></span>
+            {/each}
+          </div>
+        </div>
+      {:else}
+        <HpBar current={creature.currentHp} max={creature.maxHp} temp={creature.tempHp} variant={hpVariant} />
+      {/if}
+    </div>
+
+    <div class="conditions-bar">
+      {#each creature.conditions as key (key)}
+        <span class="cond-emoji" title={conditionLabel(key)}>{conditionEmoji(key)}</span>
+      {/each}
+      <button
+        class="cond-toggle"
+        aria-label="Add condition"
+        aria-expanded={showConditions}
+        onclick={() => (showConditions = !showConditions)}>+</button
+      >
+    </div>
+  </div>
 
   <div class="controls">
     {#if showDeathSaves}
-      <button class="save-btn success" aria-label="Add success" onclick={() => onDeathSave('success')}>✓</button>
-      <button class="save-btn failure" aria-label="Add failure" onclick={() => onDeathSave('failure')}>✗</button>
+      {#if state === 'dying'}
+        <button class="save-btn success" aria-label="Add success" onclick={() => onDeathSave('success')}>✓</button>
+        <button class="save-btn failure" aria-label="Add failure" onclick={() => onDeathSave('failure')}>✗</button>
+      {/if}
     {:else}
       <input class="amount" type="number" min="1" aria-label="Amount" bind:value={amount} />
       <button class="hp-btn damage" aria-label="Damage" onclick={() => applyAmount(onDamage)}>−</button>
@@ -134,16 +210,73 @@
     text-align: center;
     font-weight: 700;
     color: var(--accent);
+    padding: 4px 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
   }
-  .name-group {
-    flex: 0 1 auto;
+  .initiative:hover {
+    border-color: var(--border);
+  }
+  .initiative-input {
+    width: 4rem;
+    padding: 4px 6px;
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .ca {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 4px 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .ca:hover {
+    color: var(--text);
+  }
+  .ca-input {
+    width: 4rem;
+    padding: 4px 6px;
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .hp-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .hp-slot {
+    display: flex;
+  }
+  .conditions-bar {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
-    min-width: 0;
   }
   .name {
+    flex: 0 1 auto;
+    min-width: 0;
     font-weight: 600;
   }
   .cond-emoji {

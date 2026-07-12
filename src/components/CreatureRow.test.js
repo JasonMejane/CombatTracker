@@ -84,6 +84,22 @@ describe('CreatureRow', () => {
     render(CreatureRow, { creature: c })
     expect(screen.getByText(/stable/i)).toBeInTheDocument()
   })
+
+  it('hides the death-save buttons once stable', () => {
+    let c = damage(player(), 20)
+    for (let i = 0; i < 3; i++) c = addDeathSave(c, 'success')
+    render(CreatureRow, { creature: c })
+    expect(screen.queryByRole('button', { name: /success/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /failure/i })).not.toBeInTheDocument()
+  })
+
+  it('hides the death-save buttons once dead', () => {
+    let c = damage(player(), 20)
+    for (let i = 0; i < 3; i++) c = addDeathSave(c, 'failure')
+    render(CreatureRow, { creature: c })
+    expect(screen.queryByRole('button', { name: /success/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /failure/i })).not.toBeInTheDocument()
+  })
 })
 
 describe('CreatureRow interactions', () => {
@@ -152,6 +168,89 @@ describe('CreatureRow interactions', () => {
   it('has no death-save buttons for a living player', () => {
     render(CreatureRow, { creature: player() })
     expect(screen.queryByRole('button', { name: /success/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('CreatureRow initiative editing', () => {
+  it('shows no initiative input until the value is clicked', () => {
+    render(CreatureRow, { creature: player() })
+    expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
+  })
+
+  it('reveals an input seeded with the current value when clicked', async () => {
+    render(CreatureRow, { creature: player() })
+    await fireEvent.click(screen.getByText('15'))
+    expect(screen.getByLabelText(/initiative/i)).toHaveValue(15)
+  })
+
+  it('commits the new initiative on blur', async () => {
+    const onSetInitiative = vi.fn()
+    render(CreatureRow, { creature: player(), onSetInitiative })
+    await fireEvent.click(screen.getByText('15'))
+    const input = screen.getByLabelText(/initiative/i)
+    await fireEvent.input(input, { target: { value: '9' } })
+    await fireEvent.blur(input)
+    expect(onSetInitiative).toHaveBeenCalledWith(9)
+  })
+
+  it('commits the new initiative on Enter', async () => {
+    const onSetInitiative = vi.fn()
+    render(CreatureRow, { creature: player(), onSetInitiative })
+    await fireEvent.click(screen.getByText('15'))
+    const input = screen.getByLabelText(/initiative/i)
+    await fireEvent.input(input, { target: { value: '7' } })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSetInitiative).toHaveBeenCalledWith(7)
+  })
+
+  it('returns to the plain value after committing', async () => {
+    render(CreatureRow, { creature: player(), onSetInitiative: vi.fn() })
+    await fireEvent.click(screen.getByText('15'))
+    const input = screen.getByLabelText(/initiative/i)
+    await fireEvent.input(input, { target: { value: '9' } })
+    await fireEvent.blur(input)
+    expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('CreatureRow armor class', () => {
+  it('shows the armor class beside the name', () => {
+    render(CreatureRow, { creature: player({ ca: 17 }) })
+    expect(screen.getByText('CA 17')).toBeInTheDocument()
+  })
+
+  it('reveals an input seeded with the current CA when clicked', async () => {
+    render(CreatureRow, { creature: player({ ca: 17 }) })
+    await fireEvent.click(screen.getByText('CA 17'))
+    expect(screen.getByLabelText('CA')).toHaveValue(17)
+  })
+
+  it('commits the new CA on blur', async () => {
+    const onSetCa = vi.fn()
+    render(CreatureRow, { creature: player({ ca: 17 }), onSetCa })
+    await fireEvent.click(screen.getByText('CA 17'))
+    const input = screen.getByLabelText('CA')
+    await fireEvent.input(input, { target: { value: '14' } })
+    await fireEvent.blur(input)
+    expect(onSetCa).toHaveBeenCalledWith(14)
+  })
+
+  it('commits the new CA on Enter', async () => {
+    const onSetCa = vi.fn()
+    render(CreatureRow, { creature: player({ ca: 17 }), onSetCa })
+    await fireEvent.click(screen.getByText('CA 17'))
+    const input = screen.getByLabelText('CA')
+    await fireEvent.input(input, { target: { value: '12' } })
+    await fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSetCa).toHaveBeenCalledWith(12)
+  })
+
+  it('returns to the plain value after committing', async () => {
+    render(CreatureRow, { creature: player({ ca: 17 }), onSetCa: vi.fn() })
+    await fireEvent.click(screen.getByText('CA 17'))
+    const input = screen.getByLabelText('CA')
+    await fireEvent.blur(input)
+    expect(screen.queryByLabelText('CA')).not.toBeInTheDocument()
   })
 })
 

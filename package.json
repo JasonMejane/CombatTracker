@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "icons": "node scripts/generate-icons.mjs public/icons"
+    "icons": "node scripts/generate-icons.mjs public/icons",
+    "splash": "node scripts/generate-splash.mjs public/splash"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.1.2",

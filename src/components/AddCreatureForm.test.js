@@ -38,6 +38,23 @@ describe('AddCreatureForm', () => {
     expect(onAdd).toHaveBeenCalledWith({ name: 'Gimli', hp: 30, initiative: 9, isPlayer: true })
   })
 
+  it('includes the armor class when provided', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd })
+    await fill({ name: 'Knight', hp: '20', initiative: '9' })
+    await fireEvent.input(screen.getByLabelText('CA'), { target: { value: '18' } })
+    await fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: 'Knight', ca: 18 }))
+  })
+
+  it('omits the armor class when the field is left empty', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd })
+    await fill({ name: 'Gimli', hp: '30', initiative: '9' })
+    await fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    expect(onAdd).toHaveBeenCalledWith(expect.not.objectContaining({ ca: expect.anything() }))
+  })
+
   it('adds an enemy when the toggle is switched', async () => {
     const onAdd = vi.fn()
     render(AddCreatureForm, { onAdd })
@@ -69,5 +86,33 @@ describe('AddCreatureForm', () => {
     await fireEvent.click(screen.getByRole('button', { name: /add/i }))
     expect(screen.getByLabelText(/name/i)).toHaveValue('')
     expect(screen.getByLabelText('HP')).toHaveValue(null)
+  })
+})
+
+describe('AddCreatureForm without initiative', () => {
+  it('hides the initiative field', () => {
+    render(AddCreatureForm, { onAdd: vi.fn(), showInitiative: false })
+    expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
+  })
+
+  it('still offers the armor-class field', () => {
+    render(AddCreatureForm, { onAdd: vi.fn(), showInitiative: false })
+    expect(screen.getByLabelText('CA')).toBeInTheDocument()
+  })
+
+  it('submits name and hp without an initiative key', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd, showInitiative: false })
+    await fill({ name: 'Goblin', hp: '7' })
+    await fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Goblin', hp: 7, isPlayer: true })
+  })
+
+  it('submits without needing an initiative value', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd, showInitiative: false })
+    await fill({ name: 'Goblin', hp: '7' })
+    await fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    expect(onAdd).toHaveBeenCalled()
   })
 })

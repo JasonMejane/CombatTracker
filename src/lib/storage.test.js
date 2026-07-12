@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { loadState, saveState } from './storage.js'
+import { loadState, saveState, loadCatalog, saveCatalog } from './storage.js'
 import { createCreature } from './creatures.js'
 
 describe('storage', () => {
@@ -45,6 +45,7 @@ describe('storage', () => {
     const { creatures } = loadState()
     expect(creatures[0].conditions).toEqual([])
     expect(creatures[0].tempHp).toBe(0)
+    expect(creatures[0].ca).toBe(10)
   })
 
   it('keeps existing conditions and temp HP when loading', () => {
@@ -55,5 +56,41 @@ describe('storage', () => {
     const { creatures } = loadState()
     expect(creatures[0].conditions).toEqual(['poisoned'])
     expect(creatures[0].tempHp).toBe(5)
+  })
+})
+
+describe('catalog storage', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('returns an empty array when nothing is stored', () => {
+    expect(loadCatalog()).toEqual([])
+  })
+
+  it('round-trips a saved catalog', () => {
+    const catalog = [createCreature({ name: 'Goblin', hp: 7, initiative: 1, isPlayer: false })]
+    saveCatalog(catalog)
+    expect(loadCatalog()).toEqual(catalog)
+  })
+
+  it('returns an empty array when stored data is corrupt', () => {
+    localStorage.setItem('combat-tracker-catalog', '{not valid json')
+    expect(loadCatalog()).toEqual([])
+  })
+
+  it('backfills fields missing from older saved creatures', () => {
+    const legacy = {
+      id: 'x',
+      name: 'Old Goblin',
+      maxHp: 7,
+      currentHp: 7,
+      initiative: 1,
+      isPlayer: false,
+      deathSaves: { successes: 0, failures: 0 },
+    }
+    localStorage.setItem('combat-tracker-catalog', JSON.stringify([legacy]))
+    const catalog = loadCatalog()
+    expect(catalog[0].conditions).toEqual([])
+    expect(catalog[0].tempHp).toBe(0)
+    expect(catalog[0].ca).toBe(10)
   })
 })

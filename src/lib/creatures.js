@@ -1,6 +1,7 @@
 const MAX_DEATH_SAVES = 3
+const DEFAULT_CA = 10
 
-export function createCreature({ name, hp, maxHp, initiative, isPlayer }) {
+export function createCreature({ name, hp, maxHp, initiative, isPlayer, ca }) {
   return {
     id: crypto.randomUUID(),
     name,
@@ -8,6 +9,7 @@ export function createCreature({ name, hp, maxHp, initiative, isPlayer }) {
     currentHp: hp,
     initiative,
     isPlayer,
+    ca: ca ?? DEFAULT_CA,
     deathSaves: { successes: 0, failures: 0 },
     conditions: [],
     tempHp: 0,
@@ -20,6 +22,14 @@ export function setTempHp(creature, value) {
 
 export function addTempHp(creature, amount) {
   return setTempHp(creature, creature.tempHp + amount)
+}
+
+export function setInitiative(creature, value) {
+  return { ...creature, initiative: Number(value) }
+}
+
+export function setCa(creature, value) {
+  return { ...creature, ca: Number(value) }
 }
 
 export function toggleCondition(creature, key) {

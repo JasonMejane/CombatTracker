@@ -11,6 +11,8 @@
     onRevive = () => {},
     onToggleCondition = () => {},
     onAddTemp = () => {},
+    onSetInitiative = () => {},
+    onSetCa = () => {},
   } = $props()
 
   const ordered = $derived(sortByInitiative(creatures))
@@ -31,6 +33,8 @@
           onRevive={() => onRevive(creature.id)}
           onToggleCondition={(key) => onToggleCondition(creature.id, key)}
           onAddTemp={(value) => onAddTemp(creature.id, value)}
+          onSetInitiative={(value) => onSetInitiative(creature.id, value)}
+          onSetCa={(value) => onSetCa(creature.id, value)}
         />
       </li>
     {/each}
