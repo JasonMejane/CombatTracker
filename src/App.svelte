@@ -137,13 +137,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 16px;
+    /* Top inset clears the (translucent) status bar in standalone / landscape. */
+    padding: max(16px, env(safe-area-inset-top)) 16px 16px;
     border-bottom: 1px solid var(--border);
   }
   .brand {
     display: flex;
     align-items: center;
     gap: 10px;
+    /* Shrink instead of pushing overflow so the title can truncate. */
+    min-width: 0;
   }
   .logo {
     display: block;
@@ -154,6 +157,12 @@
     font-size: 1.4rem;
     color: var(--accent);
     letter-spacing: 0.5px;
+    /* Keep the title on one line so the header height matches across views;
+       truncate rather than wrap on very narrow screens. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .tabs {
     display: flex;
@@ -179,6 +188,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* Reserve the Next-turn button's height (line + padding) so the header
+       stays the same height on the catalog view, where the button is absent. */
+    min-height: calc(1.45em + 20px);
   }
   .next-turn {
     padding: 10px 16px;
@@ -187,11 +199,14 @@
     background: var(--accent);
     border: none;
     border-radius: 8px;
+    /* Never wrap: a single-line button keeps the header height matched to the
+       catalog view (where the button is absent). */
+    white-space: nowrap;
   }
   .encounter-footer {
     display: flex;
     justify-content: center;
-    padding: 12px 16px 20px;
+    padding: 12px 16px max(20px, env(safe-area-inset-bottom));
   }
   .new-encounter {
     padding: 10px 14px;
@@ -211,5 +226,36 @@
   }
   :global(.creature-list) {
     flex: 1;
+  }
+
+  /* Tablet and up: keep the two tabs from stretching edge-to-edge. */
+  @media (min-width: 768px) {
+    .tabs {
+      justify-content: center;
+    }
+    .tab {
+      flex: 0 1 220px;
+    }
+  }
+
+  /* Landscape phone: reclaim vertical space by slimming the chrome. */
+  @media (orientation: landscape) and (max-height: 500px) {
+    header {
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-bottom: 8px;
+    }
+    h1 {
+      font-size: 1.15rem;
+    }
+    .tabs {
+      padding: 6px 16px;
+    }
+    .tab {
+      padding: 6px 14px;
+    }
+    .encounter-footer {
+      padding-top: 8px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
   }
 </style>

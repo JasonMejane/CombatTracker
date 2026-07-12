@@ -19,7 +19,8 @@
     "format:check": "prettier --check .",
     "check": "svelte-check --tsconfig ./jsconfig.json",
     "icons": "node scripts/generate-icons.mjs public/icons",
-    "splash": "node scripts/generate-splash.mjs public/splash"
+    "splash": "node scripts/generate-splash.mjs public/splash",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -32,6 +33,7 @@
     "eslint-plugin-svelte": "^3.20.0",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
+    "playwright": "^1.61.1",
     "prettier": "^3.9.5",
     "prettier-plugin-svelte": "^4.1.1",
     "svelte": "^5.56.4",

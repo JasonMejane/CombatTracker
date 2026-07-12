@@ -66,6 +66,7 @@
   }
   .filters {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 12px 16px 0;
   }
@@ -100,7 +101,7 @@
   .catalog-footer {
     display: flex;
     justify-content: center;
-    padding: 12px 16px 20px;
+    padding: 12px 16px max(20px, env(safe-area-inset-bottom));
   }
   .delete-all {
     padding: 10px 14px;
@@ -116,5 +117,16 @@
   }
   .delete-all:disabled {
     opacity: 0.4;
+  }
+
+  /* Landscape phone: reclaim vertical space in the chrome. */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .filters {
+      padding-top: 8px;
+    }
+    .catalog-footer {
+      padding-top: 8px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
   }
 </style>

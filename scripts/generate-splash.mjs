@@ -30,7 +30,8 @@ const BLADE_HALF = 0.035
 const GUARD_HALF = 0.03
 const POMMEL_R = 0.05
 
-// Portrait device resolutions (CSS points + device pixel ratio).
+// Device resolutions (CSS points + device pixel ratio); each yields a portrait
+// and a landscape (swapped dimensions) launch image.
 const DEVICES = [
   { w: 320, h: 568, dpr: 2 },
   { w: 375, h: 667, dpr: 2 },
@@ -134,11 +135,16 @@ function makePng(width, height) {
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
 }
 
-function linkTag({ w, h, dpr }, file) {
+function linkTag({ w, h, dpr }, file, orientation) {
   const media =
     `screen and (device-width: ${w}px) and (device-height: ${h}px) ` +
-    `and (-webkit-device-pixel-ratio: ${dpr}) and (orientation: portrait)`
+    `and (-webkit-device-pixel-ratio: ${dpr}) and (orientation: ${orientation})`
   return `<link rel="apple-touch-startup-image" media="${media}" href="/splash/${file}" />`
+}
+
+function writeSplash(width, height, file) {
+  writeFileSync(`${outDir}/${file}`, makePng(width, height))
+  console.log(`wrote ${outDir}/${file}`)
 }
 
 const outDir = process.argv[2] ?? 'public/splash'
@@ -147,10 +153,12 @@ const tags = []
 for (const device of DEVICES) {
   const width = device.w * device.dpr
   const height = device.h * device.dpr
-  const file = `apple-splash-${width}-${height}.png`
-  writeFileSync(`${outDir}/${file}`, makePng(width, height))
-  tags.push(linkTag(device, file))
-  console.log(`wrote ${outDir}/${file}`)
+  const portraitFile = `apple-splash-${width}-${height}.png`
+  const landscapeFile = `apple-splash-${height}-${width}-landscape.png`
+  writeSplash(width, height, portraitFile)
+  writeSplash(height, width, landscapeFile)
+  tags.push(linkTag(device, portraitFile, 'portrait'))
+  tags.push(linkTag(device, landscapeFile, 'landscape'))
 }
 console.log('\n<!-- iOS launch images -->')
 console.log(tags.join('\n'))

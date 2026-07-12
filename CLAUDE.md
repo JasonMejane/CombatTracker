@@ -20,6 +20,9 @@ Svelte 5 (runes) · Vite · vite-plugin-pwa · plain CSS · Vitest +
 - `npm run check` — svelte-check (component/prop/rune diagnostics)
 - `npm run icons` — regenerate PWA PNG icons from `scripts/generate-icons.mjs`
 - `npm run splash` — regenerate iOS launch images from `scripts/generate-splash.mjs`
+- `npm run screenshots` — responsive screenshots across device sizes/orientations
+  via `scripts/screenshots.mjs` (Playwright; needs `npm run preview` running and a
+  one-time `npx playwright install chromium`; output in git-ignored `screenshots/`)
 
 ## Architecture
 

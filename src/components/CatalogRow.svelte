@@ -102,6 +102,7 @@
   .catalog-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 12px 16px;
     border-radius: 10px;
@@ -213,8 +214,8 @@
     border-radius: 8px;
   }
   .remove-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     font-size: 1rem;
     color: var(--enemy-border);
     background: var(--surface-2);

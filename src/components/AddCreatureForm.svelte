@@ -44,27 +44,29 @@
     <input id="name" type="text" bind:value={name} autocomplete="off" />
   </div>
 
-  <div class="field">
-    <label for="hp">HP</label>
-    <input id="hp" type="number" min="1" bind:value={hp} />
-  </div>
-
-  <div class="field">
-    <label for="maxHp">Max HP</label>
-    <input id="maxHp" type="number" min="1" placeholder="= HP" bind:value={maxHp} />
-  </div>
-
-  <div class="field">
-    <label for="ca">CA</label>
-    <input id="ca" type="number" min="0" placeholder="10" bind:value={ca} />
-  </div>
-
-  {#if showInitiative}
+  <div class="stats">
     <div class="field">
-      <label for="initiative">Initiative</label>
-      <input id="initiative" type="number" bind:value={initiative} />
+      <label for="hp">HP</label>
+      <input id="hp" type="number" min="1" bind:value={hp} />
     </div>
-  {/if}
+
+    <div class="field">
+      <label for="maxHp">Max HP</label>
+      <input id="maxHp" type="number" min="1" placeholder="= HP" bind:value={maxHp} />
+    </div>
+
+    <div class="field">
+      <label for="ca">CA</label>
+      <input id="ca" type="number" min="0" placeholder="10" bind:value={ca} />
+    </div>
+
+    {#if showInitiative}
+      <div class="field">
+        <label for="initiative">Initiative</label>
+        <input id="initiative" type="number" bind:value={initiative} />
+      </div>
+    {/if}
+  </div>
 
   <fieldset class="side">
     <legend>Side</legend>
@@ -77,21 +79,27 @@
 
 <style>
   .add-form {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    align-items: end;
     padding: 12px 16px;
     border-top: 1px solid var(--border);
     background: var(--surface);
+  }
+  /* Numeric fields spread evenly across the width (auto-fit collapses spare tracks
+     here because there are no full-width siblings inside .stats) and wrap 2-up on
+     small phones. */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    align-items: end;
   }
   .field {
     display: flex;
     flex-direction: column;
     gap: 4px;
-  }
-  .field.name {
-    grid-column: 1 / -1;
+    min-width: 0;
   }
   label {
     font-size: 0.8rem;
@@ -110,7 +118,6 @@
     width: 100%;
   }
   .side {
-    grid-column: 1 / -1;
     display: flex;
     gap: 16px;
     align-items: center;
@@ -131,7 +138,6 @@
     color: var(--text);
   }
   button[type='submit'] {
-    grid-column: 1 / -1;
     padding: 12px;
     font-weight: 700;
     color: var(--bg);
@@ -141,5 +147,23 @@
   }
   button[type='submit']:disabled {
     opacity: 0.4;
+  }
+
+  /* Landscape phone: tighten the form so it eats less vertical space. */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .add-form {
+      gap: 6px;
+      padding: 8px 16px;
+    }
+    .stats {
+      gap: 8px;
+    }
+    input[type='text'],
+    input[type='number'] {
+      padding: 8px 10px;
+    }
+    button[type='submit'] {
+      padding: 8px 12px;
+    }
   }
 </style>

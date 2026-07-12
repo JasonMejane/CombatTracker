@@ -16,6 +16,9 @@ dev-dist
 # Vercel
 .vercel
 
+# Generated responsive screenshots (scripts/screenshots.mjs)
+screenshots
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

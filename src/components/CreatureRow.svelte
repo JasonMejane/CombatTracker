@@ -165,6 +165,7 @@
   .creature-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     padding: 12px 16px;
     border-radius: 10px;
@@ -262,6 +263,9 @@
     flex: 0 1 auto;
     min-width: 0;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .cond-emoji {
     font-size: 1rem;
@@ -312,7 +316,7 @@
     gap: 6px;
   }
   .amount {
-    width: 4ch;
+    width: 3.5rem;
     padding: 8px 6px;
     font: inherit;
     text-align: center;

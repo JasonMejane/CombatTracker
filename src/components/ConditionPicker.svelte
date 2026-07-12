@@ -24,7 +24,7 @@
 <style>
   .condition-picker {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     gap: 6px;
     padding: 10px;
     background: var(--surface-2);
