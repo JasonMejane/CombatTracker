@@ -1,11 +1,18 @@
 <script>
-  let { creatureName, onSend = () => {}, onCancel = () => {} } = $props()
+  import { rollInitiative } from '../lib/dice.js'
 
-  let initiative = $state(1)
+  let { creatureName, isPlayer = true, onSend = () => {}, onCancel = () => {} } = $props()
+
+  let initiative = $state(0)
+  let bonus = $state(0)
 
   function handleSubmit(event) {
     event.preventDefault()
     onSend(Number(initiative))
+  }
+
+  function roll() {
+    initiative = rollInitiative(Number(bonus))
   }
 </script>
 
@@ -15,8 +22,17 @@
     <span>Initiative</span>
     <input type="number" bind:value={initiative} />
   </label>
-  <button type="submit" class="send">Send</button>
-  <button type="button" class="cancel" onclick={() => onCancel()}>Cancel</button>
+  {#if !isPlayer}
+    <button type="button" class="roll" aria-label="Roll" title="Roll a d20 + bonus for initiative" onclick={roll}>🎲 Roll</button>
+    <label class="field">
+      <span>Bonus</span>
+      <input type="number" bind:value={bonus} />
+    </label>
+  {/if}
+  <div class="actions">
+    <button type="submit" class="send">Send</button>
+    <button type="button" class="cancel" onclick={() => onCancel()}>Cancel</button>
+  </div>
 </form>
 
 <style>
@@ -54,6 +70,18 @@
     padding: 8px 12px;
     font-weight: 700;
     border-radius: 8px;
+  }
+  .roll {
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    /* Keep Send + Cancel together, stuck to the right edge of their row. */
+    margin-left: auto;
   }
   .send {
     color: var(--bg);

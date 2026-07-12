@@ -89,7 +89,12 @@
   </div>
 
   {#if showSend}
-    <SendToEncounterForm creatureName={creature.name} onSend={handleSend} onCancel={() => (showSend = false)} />
+    <SendToEncounterForm
+      creatureName={creature.name}
+      isPlayer={creature.isPlayer}
+      onSend={handleSend}
+      onCancel={() => (showSend = false)}
+    />
   {/if}
 </div>
 

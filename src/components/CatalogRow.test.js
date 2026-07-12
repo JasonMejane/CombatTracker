@@ -134,4 +134,16 @@ describe('CatalogRow sending', () => {
     await fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
   })
+
+  it('offers an initiative roll for an NPC', async () => {
+    render(CatalogRow, { creature: goblin() })
+    await fireEvent.click(screen.getByRole('button', { name: /send to encounter/i }))
+    expect(screen.getByRole('button', { name: /roll/i })).toBeInTheDocument()
+  })
+
+  it('offers no initiative roll for a player', async () => {
+    render(CatalogRow, { creature: goblin({ isPlayer: true }) })
+    await fireEvent.click(screen.getByRole('button', { name: /send to encounter/i }))
+    expect(screen.queryByRole('button', { name: /roll/i })).not.toBeInTheDocument()
+  })
 })

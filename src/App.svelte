@@ -49,7 +49,11 @@
   }
 
   const addToCatalog = (data) => (catalog = [...catalog, createCatalogCreature(data)])
-  const removeFromCatalog = (id) => (catalog = catalog.filter((c) => c.id !== id))
+  function removeFromCatalog(id) {
+    const creature = catalog.find((c) => c.id === id)
+    if (creature && !confirm(`Delete ${creature.name} from the catalog?`)) return
+    catalog = catalog.filter((c) => c.id !== id)
+  }
   const setCatalogHp = (id, value) => (catalog = catalog.map((c) => (c.id === id ? setBaseHp(c, value) : c)))
   const setCatalogCa = (id, value) => (catalog = catalog.map((c) => (c.id === id ? setCa(c, value) : c)))
 

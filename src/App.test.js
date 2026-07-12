@@ -165,12 +165,22 @@ describe('App catalog', () => {
     expect(catalogNames()).toEqual(['Goblin'])
   })
 
-  it('removes a creature from the catalog', async () => {
+  it('removes a creature from the catalog once confirmed', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(App)
     await openCatalog()
     await addToCatalog({ name: 'Goblin', hp: 7, enemy: true })
     await fireEvent.click(screen.getByRole('button', { name: /remove/i }))
     expect(catalogNames()).toEqual([])
+  })
+
+  it('keeps the creature when the removal is cancelled', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(App)
+    await openCatalog()
+    await addToCatalog({ name: 'Goblin', hp: 7, enemy: true })
+    await fireEvent.click(screen.getByRole('button', { name: /remove/i }))
+    expect(catalogNames()).toEqual(['Goblin'])
   })
 
   it('sends a catalog creature into the encounter and returns to it', async () => {

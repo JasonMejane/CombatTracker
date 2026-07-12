@@ -44,6 +44,8 @@ Two layers, kept strictly apart:
     is already in the encounter).
   - `conditions.js` — `CONDITIONS` catalog (`key`/`label`/`emoji`) +
     `conditionEmoji`/`conditionLabel` lookups.
+  - `dice.js` — `rollD20` (random integer 1–20) and `rollInitiative(bonus)`
+    (`rollD20() + bonus`); used by the NPC send flow.
   - `storage.js` — `loadState`/`saveState` over `STORAGE_KEY` and
     `loadCatalog`/`saveCatalog` over `CATALOG_KEY` (separate keys); both return
     defaults on missing/corrupt JSON and backfill legacy creatures via
@@ -113,7 +115,10 @@ initiative sorts descending with players winning ties; `nextActiveId` wraps arou
 the ordered list. Legacy saves missing `conditions`/`tempHp` are backfilled on load.
 Catalog creatures share this exact shape (with `initiative: 1`) and persist under a
 separate key; editing catalog HP (`setBaseHp`) sets `currentHp` and `maxHp` together.
-Sending asks only for initiative — a creature's `ca` carries over unchanged.
+Sending asks only for initiative (default 0) — a creature's `ca` carries over
+unchanged. For NPCs the send form also offers an initiative **bonus** (default 0,
+not persisted) and a **Roll** button that sets initiative to `rollD20() + bonus`;
+players type their own rolled initiative.
 
 ## Notes
 
