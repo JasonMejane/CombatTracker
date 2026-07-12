@@ -3,7 +3,10 @@ import { describe, it, expect, vi } from 'vitest'
 import CatalogRow from './CatalogRow.svelte'
 import { createCatalogCreature } from '../lib/catalog.js'
 
-const goblin = (over = {}) => ({ ...createCatalogCreature({ name: 'Goblin', hp: 7, isPlayer: false }), ...over })
+const goblin = (over = {}) => ({
+  ...createCatalogCreature({ name: 'Goblin', hp: 7, isPlayer: false }),
+  ...over,
+})
 
 function row(container) {
   return container.querySelector('.catalog-row')

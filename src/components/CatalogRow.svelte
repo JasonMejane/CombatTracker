@@ -1,13 +1,7 @@
 <script>
   import SendToEncounterForm from './SendToEncounterForm.svelte'
 
-  let {
-    creature,
-    onRemove = () => {},
-    onSetHp = () => {},
-    onSetCa = () => {},
-    onSend = () => {},
-  } = $props()
+  let { creature, onRemove = () => {}, onSetHp = () => {}, onSetCa = () => {}, onSend = () => {} } = $props()
 
   let editingHp = $state(false)
   let hpDraft = $state(0)
@@ -64,15 +58,7 @@
     <div class="name-group">
       <span class="name">{creature.name}</span>
       {#if editingCa}
-        <input
-          class="ca-input"
-          type="number"
-          aria-label="CA"
-          bind:value={caDraft}
-          onblur={commitCa}
-          onkeydown={onCaKey}
-          use:focusOnMount
-        />
+        <input class="ca-input" type="number" aria-label="CA" bind:value={caDraft} onblur={commitCa} onkeydown={onCaKey} use:focusOnMount />
       {:else}
         <button class="ca" title="Edit armor class" onclick={startEditCa}>CA {creature.ca}</button>
       {/if}
@@ -103,11 +89,7 @@
   </div>
 
   {#if showSend}
-    <SendToEncounterForm
-      creatureName={creature.name}
-      onSend={handleSend}
-      onCancel={() => (showSend = false)}
-    />
+    <SendToEncounterForm creatureName={creature.name} onSend={handleSend} onCancel={() => (showSend = false)} />
   {/if}
 </div>
 

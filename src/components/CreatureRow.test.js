@@ -3,10 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 import CreatureRow from './CreatureRow.svelte'
 import { createCreature, damage, addDeathSave, toggleCondition, setTempHp } from '../lib/creatures.js'
 
-const player = (over = {}) =>
-  createCreature({ name: 'Aragorn', hp: 20, initiative: 15, isPlayer: true, ...over })
-const enemy = (over = {}) =>
-  createCreature({ name: 'Goblin', hp: 7, initiative: 12, isPlayer: false, ...over })
+const player = (over = {}) => createCreature({ name: 'Aragorn', hp: 20, initiative: 15, isPlayer: true, ...over })
+const enemy = (over = {}) => createCreature({ name: 'Goblin', hp: 7, initiative: 12, isPlayer: false, ...over })
 
 function row(container) {
   return container.querySelector('.creature-row')

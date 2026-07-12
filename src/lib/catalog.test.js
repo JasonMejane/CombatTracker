@@ -1,12 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  createCatalogCreature,
-  setBaseHp,
-  sortByName,
-  filterBySide,
-  spawnFromCatalog,
-  uniqueEnemyName,
-} from './catalog.js'
+import { createCatalogCreature, setBaseHp, sortByName, filterBySide, spawnFromCatalog, uniqueEnemyName } from './catalog.js'
 
 describe('createCatalogCreature', () => {
   it('builds a full-HP template with initiative 1', () => {

@@ -11,7 +11,9 @@
   {#if temp > 0}
     <div class="hp-temp" style="left: {currentPercent}%; width: {tempPercent}%"></div>
   {/if}
-  <span class="hp-text">{current}/{max}{#if temp > 0}&nbsp;(+{temp}){/if}</span>
+  <span class="hp-text"
+    >{current}/{max}{#if temp > 0}&nbsp;(+{temp}){/if}</span
+  >
 </div>
 
 <style>
@@ -43,13 +45,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    background: repeating-linear-gradient(
-      45deg,
-      var(--accent),
-      var(--accent) 4px,
-      transparent 4px,
-      transparent 8px
-    );
+    background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 4px, transparent 4px, transparent 8px);
     background-color: rgba(201, 162, 39, 0.35);
   }
   .hp-text {

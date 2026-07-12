@@ -39,7 +39,7 @@ the device. No account, no server, no internet required.
 ### Install as an app
 
 **Android (Chrome):** open the site, then either tap the **Install** button in
-the header or use the browser menu → *Add to Home screen*. It launches
+the header or use the browser menu → _Add to Home screen_. It launches
 full-screen like a native app.
 
 **Desktop (Chrome/Edge):** click the **Install** button in the header, or the
@@ -83,6 +83,8 @@ Switch to the **Catalog** tab to manage reusable creatures:
    CA carried over — only the initiative is asked. Sending an enemy whose name
    already exists there appends an index (`Goblin 2`, …).
 5. **Remove** — tap ✕ to delete a creature from the catalog.
+6. **Delete all** — the danger button at the bottom empties the whole catalog after a
+   confirmation prompt.
 
 The catalog is saved on the device separately from the encounter and restored on
 reopen.
@@ -104,16 +106,21 @@ Open the printed local URL in a browser.
 
 ### Scripts
 
-| Script                | What it does                                        |
-| --------------------- | --------------------------------------------------- |
-| `npm run dev`         | Start the Vite dev server.                          |
-| `npm run build`       | Production build (generates the PWA service worker).|
-| `npm run preview`     | Serve the production build locally.                 |
-| `npm test`            | Run the test suite once.                            |
-| `npm run test:watch`  | Run tests in watch mode.                            |
-| `npm run test:ui`     | Run tests with the Vitest UI.                       |
-| `npm run icons`       | Regenerate the PWA PNG icons from the crossed-swords geometry. |
-| `npm run splash`      | Regenerate the iOS launch images from the same geometry.        |
+| Script                 | What it does                                                   |
+| ---------------------- | -------------------------------------------------------------- |
+| `npm run dev`          | Start the Vite dev server.                                     |
+| `npm run build`        | Production build (generates the PWA service worker).           |
+| `npm run preview`      | Serve the production build locally.                            |
+| `npm test`             | Run the test suite once.                                       |
+| `npm run test:watch`   | Run tests in watch mode.                                       |
+| `npm run test:ui`      | Run tests with the Vitest UI.                                  |
+| `npm run lint`         | Lint with ESLint (flat config, Svelte-aware).                  |
+| `npm run lint:fix`     | Lint and auto-fix where possible.                              |
+| `npm run format`       | Format all files with Prettier.                                |
+| `npm run format:check` | Verify formatting without writing.                             |
+| `npm run check`        | Svelte/type diagnostics with svelte-check.                     |
+| `npm run icons`        | Regenerate the PWA PNG icons from the crossed-swords geometry. |
+| `npm run splash`       | Regenerate the iOS launch images from the same geometry.       |
 
 ### Testing
 
@@ -122,6 +129,16 @@ The project follows a test-driven approach. Pure logic
 [Vitest](https://vitest.dev/) and
 [@testing-library/svelte](https://testing-library.com/docs/svelte-testing-library/intro/)
 (jsdom environment). Run `npm test` before committing.
+
+### Linting & formatting
+
+- **ESLint** (flat config, `eslint.config.js`) with `@eslint/js` + `eslint-plugin-svelte`
+  recommended rules, plus the project convention `complexity: ['error', 4]` on `src/`
+  (relaxed for test files). Run `npm run lint`.
+- **Prettier** (`.prettierrc.json`) owns formatting; `eslint-config-prettier` keeps ESLint
+  out of its way. Run `npm run format` (write) or `npm run format:check` (verify).
+- **svelte-check** validates Svelte components, props and runes. Run `npm run check`.
+  (`jsconfig` has `checkJs: false`, so plain JS isn't strictly type-checked.)
 
 ### Project structure
 

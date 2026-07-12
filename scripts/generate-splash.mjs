@@ -88,8 +88,7 @@ function sampleLogoBox(px, py, box) {
 }
 
 function splashColorAt(x, y, box, originX, originY) {
-  const insideBox =
-    x >= originX && x < originX + box && y >= originY && y < originY + box
+  const insideBox = x >= originX && x < originX + box && y >= originY && y < originY + box
   return insideBox ? sampleLogoBox(x - originX, y - originY, box) : BG
 }
 
@@ -132,12 +131,7 @@ function makePng(width, height) {
   ihdr[8] = 8 // bit depth
   ihdr[9] = 2 // color type: RGB
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
-  return Buffer.concat([
-    sig,
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ])
+  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
 }
 
 function linkTag({ w, h, dpr }, file) {

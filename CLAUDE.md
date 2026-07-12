@@ -15,6 +15,9 @@ Svelte 5 (runes) · Vite · vite-plugin-pwa · plain CSS · Vitest +
 - `npm test` — run the suite once (use before considering any task done)
 - `npm run test:watch` / `npm run test:ui` — watch / Vitest UI
 - `npm run build` — production build (emits the PWA service worker)
+- `npm run lint` / `npm run lint:fix` — ESLint (flat config, Svelte-aware)
+- `npm run format` / `npm run format:check` — Prettier write / verify
+- `npm run check` — svelte-check (component/prop/rune diagnostics)
 - `npm run icons` — regenerate PWA PNG icons from `scripts/generate-icons.mjs`
 - `npm run splash` — regenerate iOS launch images from `scripts/generate-splash.mjs`
 
@@ -76,6 +79,10 @@ click-to-edit inline pattern (commits on Enter/blur).
   `--text`/`--text-muted`). Reuse tokens; no CSS framework.
 - Minimal changes; no unrelated refactors. Comments only where truly needed —
   let clear names carry the meaning.
+- **Tooling gate:** keep `npm run lint`, `npm run format:check` and `npm run check`
+  green alongside `npm test`. ESLint enforces `complexity ≤ 4` on `src/` (off for
+  test files); Prettier owns formatting (don't hand-fight it); svelte-check runs
+  with `checkJs: false` (Svelte/type diagnostics, not strict plain-JS typing).
 
 ## Data model
 

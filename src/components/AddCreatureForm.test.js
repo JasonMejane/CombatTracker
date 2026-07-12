@@ -5,10 +5,8 @@ import AddCreatureForm from './AddCreatureForm.svelte'
 async function fill({ name, hp, maxHp, initiative }) {
   if (name !== undefined) await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: name } })
   if (hp !== undefined) await fireEvent.input(screen.getByLabelText('HP'), { target: { value: hp } })
-  if (maxHp !== undefined)
-    await fireEvent.input(screen.getByLabelText(/max hp/i), { target: { value: maxHp } })
-  if (initiative !== undefined)
-    await fireEvent.input(screen.getByLabelText(/initiative/i), { target: { value: initiative } })
+  if (maxHp !== undefined) await fireEvent.input(screen.getByLabelText(/max hp/i), { target: { value: maxHp } })
+  if (initiative !== undefined) await fireEvent.input(screen.getByLabelText(/initiative/i), { target: { value: initiative } })
 }
 
 describe('AddCreatureForm', () => {
@@ -25,9 +23,7 @@ describe('AddCreatureForm', () => {
     render(AddCreatureForm, { onAdd })
     await fill({ name: 'Hurt Hero', hp: '10', maxHp: '24', initiative: '9' })
     await fireEvent.click(screen.getByRole('button', { name: /add/i }))
-    expect(onAdd).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Hurt Hero', hp: 10, maxHp: 24 }),
-    )
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: 'Hurt Hero', hp: 10, maxHp: 24 }))
   })
 
   it('omits max hp when the field is left empty', async () => {

@@ -59,7 +59,7 @@
     node.select()
   }
 
-  const state = $derived(deathState(creature))
+  const deathStatus = $derived(deathState(creature))
   const downed = $derived(isDown(creature))
   const greyed = $derived(downed && !creature.isPlayer)
   const showDeathSaves = $derived(downed && creature.isPlayer)
@@ -73,103 +73,87 @@
 </script>
 
 <div class="row-wrap">
-<div
-  class="creature-row"
-  class:player={creature.isPlayer}
-  class:enemy={!creature.isPlayer}
-  class:active={isActive}
-  class:down={greyed}
->
-  {#if editingInitiative}
-    <input
-      class="initiative-input"
-      type="number"
-      aria-label="Initiative"
-      bind:value={initiativeDraft}
-      onblur={commitInitiative}
-      onkeydown={onInitiativeKey}
-      use:focusOnMount
-    />
-  {:else}
-    <button class="initiative" title="Edit initiative" onclick={startEditInitiative}
-      >{creature.initiative}</button
-    >
-  {/if}
-  <span class="name">{creature.name}</span>
-
-  {#if editingCa}
-    <input
-      class="ca-input"
-      type="number"
-      aria-label="CA"
-      bind:value={caDraft}
-      onblur={commitCa}
-      onkeydown={onCaKey}
-      use:focusOnMount
-    />
-  {:else}
-    <button class="ca" title="Edit armor class" onclick={startEditCa}>CA {creature.ca}</button>
-  {/if}
-
-  <div class="hp-column">
-    <div class="hp-slot">
-      {#if showDeathSaves}
-        <div class="death-saves" data-testid="death-saves">
-          {#if state === 'dead'}
-            <span class="death-label">Dead</span>
-          {:else if state === 'stable'}
-            <span class="death-label">Stable</span>
-          {/if}
-          <div class="pips successes">
-            {#each pips as n}
-              <span class="pip success" class:filled={creature.deathSaves.successes >= n}></span>
-            {/each}
-          </div>
-          <div class="pips failures">
-            {#each pips as n}
-              <span class="pip failure" class:filled={creature.deathSaves.failures >= n}></span>
-            {/each}
-          </div>
-        </div>
-      {:else}
-        <HpBar current={creature.currentHp} max={creature.maxHp} temp={creature.tempHp} variant={hpVariant} />
-      {/if}
-    </div>
-
-    <div class="conditions-bar">
-      {#each creature.conditions as key (key)}
-        <span class="cond-emoji" title={conditionLabel(key)}>{conditionEmoji(key)}</span>
-      {/each}
-      <button
-        class="cond-toggle"
-        aria-label="Add condition"
-        aria-expanded={showConditions}
-        onclick={() => (showConditions = !showConditions)}>+</button
-      >
-    </div>
-  </div>
-
-  <div class="controls">
-    {#if showDeathSaves}
-      {#if state === 'dying'}
-        <button class="save-btn success" aria-label="Add success" onclick={() => onDeathSave('success')}>✓</button>
-        <button class="save-btn failure" aria-label="Add failure" onclick={() => onDeathSave('failure')}>✗</button>
-      {/if}
+  <div class="creature-row" class:player={creature.isPlayer} class:enemy={!creature.isPlayer} class:active={isActive} class:down={greyed}>
+    {#if editingInitiative}
+      <input
+        class="initiative-input"
+        type="number"
+        aria-label="Initiative"
+        bind:value={initiativeDraft}
+        onblur={commitInitiative}
+        onkeydown={onInitiativeKey}
+        use:focusOnMount
+      />
     {:else}
-      <input class="amount" type="number" min="1" aria-label="Amount" bind:value={amount} />
-      <button class="hp-btn damage" aria-label="Damage" onclick={() => applyAmount(onDamage)}>−</button>
-      <button class="hp-btn heal" aria-label="Heal" onclick={() => applyAmount(onHeal)}>+</button>
-      <button class="hp-btn temp" aria-label="Add temp HP" title="Add temporary HP" onclick={() => applyAmount(onAddTemp)}>🛡</button>
+      <button class="initiative" title="Edit initiative" onclick={startEditInitiative}>{creature.initiative}</button>
     {/if}
-    {#if downed}
-      <button class="revive-btn" aria-label="Revive" onclick={onRevive}>Revive</button>
-    {/if}
-  </div>
-</div>
+    <span class="name">{creature.name}</span>
 
-{#if showConditions}
-  <ConditionPicker active={creature.conditions} onToggle={onToggleCondition} />
-{/if}
+    {#if editingCa}
+      <input class="ca-input" type="number" aria-label="CA" bind:value={caDraft} onblur={commitCa} onkeydown={onCaKey} use:focusOnMount />
+    {:else}
+      <button class="ca" title="Edit armor class" onclick={startEditCa}>CA {creature.ca}</button>
+    {/if}
+
+    <div class="hp-column">
+      <div class="hp-slot">
+        {#if showDeathSaves}
+          <div class="death-saves" data-testid="death-saves">
+            {#if deathStatus === 'dead'}
+              <span class="death-label">Dead</span>
+            {:else if deathStatus === 'stable'}
+              <span class="death-label">Stable</span>
+            {/if}
+            <div class="pips successes">
+              {#each pips as n (n)}
+                <span class="pip success" class:filled={creature.deathSaves.successes >= n}></span>
+              {/each}
+            </div>
+            <div class="pips failures">
+              {#each pips as n (n)}
+                <span class="pip failure" class:filled={creature.deathSaves.failures >= n}></span>
+              {/each}
+            </div>
+          </div>
+        {:else}
+          <HpBar current={creature.currentHp} max={creature.maxHp} temp={creature.tempHp} variant={hpVariant} />
+        {/if}
+      </div>
+
+      <div class="conditions-bar">
+        {#each creature.conditions as key (key)}
+          <span class="cond-emoji" title={conditionLabel(key)}>{conditionEmoji(key)}</span>
+        {/each}
+        <button
+          class="cond-toggle"
+          aria-label="Add condition"
+          aria-expanded={showConditions}
+          onclick={() => (showConditions = !showConditions)}>+</button
+        >
+      </div>
+    </div>
+
+    <div class="controls">
+      {#if showDeathSaves}
+        {#if deathStatus === 'dying'}
+          <button class="save-btn success" aria-label="Add success" onclick={() => onDeathSave('success')}>✓</button>
+          <button class="save-btn failure" aria-label="Add failure" onclick={() => onDeathSave('failure')}>✗</button>
+        {/if}
+      {:else}
+        <input class="amount" type="number" min="1" aria-label="Amount" bind:value={amount} />
+        <button class="hp-btn damage" aria-label="Damage" onclick={() => applyAmount(onDamage)}>−</button>
+        <button class="hp-btn heal" aria-label="Heal" onclick={() => applyAmount(onHeal)}>+</button>
+        <button class="hp-btn temp" aria-label="Add temp HP" title="Add temporary HP" onclick={() => applyAmount(onAddTemp)}>🛡</button>
+      {/if}
+      {#if downed}
+        <button class="revive-btn" aria-label="Revive" onclick={onRevive}>Revive</button>
+      {/if}
+    </div>
+  </div>
+
+  {#if showConditions}
+    <ConditionPicker active={creature.conditions} onToggle={onToggleCondition} />
+  {/if}
 </div>
 
 <style>

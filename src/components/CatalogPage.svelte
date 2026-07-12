@@ -10,6 +10,7 @@
     onSetHp = () => {},
     onSetCa = () => {},
     onSend = () => {},
+    onClear = () => {},
   } = $props()
 
   let side = $state('all')
@@ -50,7 +51,11 @@
     </ul>
   {/if}
 
-  <AddCreatureForm onAdd={onAdd} showInitiative={false} />
+  <AddCreatureForm {onAdd} showInitiative={false} />
+
+  <footer class="catalog-footer">
+    <button class="delete-all" onclick={onClear} disabled={catalog.length === 0}>Delete all</button>
+  </footer>
 </section>
 
 <style>
@@ -91,5 +96,25 @@
     padding: 32px 16px;
     text-align: center;
     color: var(--text-muted);
+  }
+  .catalog-footer {
+    display: flex;
+    justify-content: center;
+    padding: 12px 16px 20px;
+  }
+  .delete-all {
+    padding: 10px 14px;
+    font-weight: 700;
+    color: var(--enemy-border);
+    background: transparent;
+    border: 1px solid var(--enemy-border);
+    border-radius: 8px;
+  }
+  .delete-all:hover:not(:disabled) {
+    color: var(--text);
+    background: var(--enemy);
+  }
+  .delete-all:disabled {
+    opacity: 0.4;
   }
 </style>

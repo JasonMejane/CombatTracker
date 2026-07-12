@@ -102,12 +102,7 @@ function makePng(size) {
   ihdr[8] = 8 // bit depth
   ihdr[9] = 2 // color type: RGB
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
-  return Buffer.concat([
-    sig,
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ])
+  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))])
 }
 
 const outDir = process.argv[2] ?? 'public/icons'

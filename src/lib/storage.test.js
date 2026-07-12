@@ -38,10 +38,7 @@ describe('storage', () => {
       isPlayer: true,
       deathSaves: { successes: 0, failures: 0 },
     }
-    localStorage.setItem(
-      'combat-tracker-state',
-      JSON.stringify({ creatures: [legacy], activeCreatureId: null }),
-    )
+    localStorage.setItem('combat-tracker-state', JSON.stringify({ creatures: [legacy], activeCreatureId: null }))
     const { creatures } = loadState()
     expect(creatures[0].conditions).toEqual([])
     expect(creatures[0].tempHp).toBe(0)

@@ -10,9 +10,7 @@ export function setBaseHp(creature, value) {
 }
 
 export function sortByName(creatures) {
-  return [...creatures].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-  )
+  return [...creatures].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
 }
 
 export function filterBySide(creatures, side) {

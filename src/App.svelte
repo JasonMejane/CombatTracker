@@ -15,12 +15,7 @@
     setInitiative,
     setCa,
   } from './lib/creatures.js'
-  import {
-    createCatalogCreature,
-    setBaseHp,
-    spawnFromCatalog,
-    uniqueEnemyName,
-  } from './lib/catalog.js'
+  import { createCatalogCreature, setBaseHp, spawnFromCatalog, uniqueEnemyName } from './lib/catalog.js'
   import { loadState, saveState, loadCatalog, saveCatalog } from './lib/storage.js'
 
   const initial = loadState()
@@ -55,10 +50,13 @@
 
   const addToCatalog = (data) => (catalog = [...catalog, createCatalogCreature(data)])
   const removeFromCatalog = (id) => (catalog = catalog.filter((c) => c.id !== id))
-  const setCatalogHp = (id, value) =>
-    (catalog = catalog.map((c) => (c.id === id ? setBaseHp(c, value) : c)))
-  const setCatalogCa = (id, value) =>
-    (catalog = catalog.map((c) => (c.id === id ? setCa(c, value) : c)))
+  const setCatalogHp = (id, value) => (catalog = catalog.map((c) => (c.id === id ? setBaseHp(c, value) : c)))
+  const setCatalogCa = (id, value) => (catalog = catalog.map((c) => (c.id === id ? setCa(c, value) : c)))
+
+  function clearCatalog() {
+    if (!confirm('Delete all creatures from the catalog?')) return
+    catalog = []
+  }
 
   function sendFromCatalog(id, initiative) {
     const source = catalog.find((c) => c.id === id)
@@ -78,20 +76,14 @@
     <div class="header-actions">
       <InstallButton />
       {#if view === 'encounter'}
-        <button class="next-turn" onclick={advanceTurn} disabled={creatures.length === 0}>
-          Next turn
-        </button>
+        <button class="next-turn" onclick={advanceTurn} disabled={creatures.length === 0}> Next turn </button>
       {/if}
     </div>
   </header>
 
   <nav class="tabs">
-    <button class="tab" class:active={view === 'encounter'} onclick={() => (view = 'encounter')}>
-      Encounter
-    </button>
-    <button class="tab" class:active={view === 'catalog'} onclick={() => (view = 'catalog')}>
-      Catalog
-    </button>
+    <button class="tab" class:active={view === 'encounter'} onclick={() => (view = 'encounter')}> Encounter </button>
+    <button class="tab" class:active={view === 'catalog'} onclick={() => (view = 'catalog')}> Catalog </button>
   </nav>
 
   {#if view === 'encounter'}
@@ -129,6 +121,7 @@
       onSetHp={setCatalogHp}
       onSetCa={setCatalogCa}
       onSend={sendFromCatalog}
+      onClear={clearCatalog}
     />
   {/if}
 </main>

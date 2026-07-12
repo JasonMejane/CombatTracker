@@ -8,7 +8,9 @@ afterEach(() => vi.restoreAllMocks())
 async function addCombatant({ name, hp, initiative, enemy = false }) {
   await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: name } })
   await fireEvent.input(screen.getByLabelText('HP'), { target: { value: String(hp) } })
-  await fireEvent.input(screen.getByLabelText(/initiative/i), { target: { value: String(initiative) } })
+  await fireEvent.input(screen.getByLabelText(/initiative/i), {
+    target: { value: String(initiative) },
+  })
   if (enemy) await fireEvent.click(screen.getByLabelText(/enemy/i))
   await fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
 }
@@ -44,13 +46,10 @@ describe('App', () => {
     render(App)
     await addCombatant({ name: 'Slow', hp: 10, initiative: 5 })
     await addCombatant({ name: 'Fast', hp: 10, initiative: 20 })
-    const names = () =>
-      Array.from(document.querySelectorAll('.creature-row .name')).map((n) => n.textContent)
+    const names = () => Array.from(document.querySelectorAll('.creature-row .name')).map((n) => n.textContent)
     expect(names()).toEqual(['Fast', 'Slow'])
 
-    const slowRow = Array.from(document.querySelectorAll('.creature-row')).find(
-      (r) => r.querySelector('.name').textContent === 'Slow',
-    )
+    const slowRow = Array.from(document.querySelectorAll('.creature-row')).find((r) => r.querySelector('.name').textContent === 'Slow')
     await fireEvent.click(slowRow.querySelector('.initiative'))
     const input = slowRow.querySelector('.initiative-input')
     await fireEvent.input(input, { target: { value: '30' } })
@@ -198,9 +197,7 @@ describe('App catalog', () => {
     await openCatalog()
     await sendCatalogCreature()
 
-    const encounterNames = Array.from(document.querySelectorAll('.creature-row .name')).map(
-      (n) => n.textContent,
-    )
+    const encounterNames = Array.from(document.querySelectorAll('.creature-row .name')).map((n) => n.textContent)
     expect(encounterNames.sort()).toEqual(['Goblin', 'Goblin 2'])
   })
 
@@ -240,6 +237,26 @@ describe('App catalog', () => {
     await fireEvent.click(screen.getByRole('button', { name: /^send$/i }))
 
     expect(screen.getByText('CA 15')).toBeInTheDocument()
+  })
+
+  it('deletes the whole catalog once confirmed', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(App)
+    await openCatalog()
+    await addToCatalog({ name: 'Goblin', hp: 7, enemy: true })
+    await addToCatalog({ name: 'Orc', hp: 10, enemy: true })
+    await fireEvent.click(screen.getByRole('button', { name: /delete all/i }))
+    expect(catalogNames()).toEqual([])
+    expect(screen.getByText(/catalog is empty/i)).toBeInTheDocument()
+  })
+
+  it('keeps the catalog when the deletion is cancelled', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(App)
+    await openCatalog()
+    await addToCatalog({ name: 'Goblin', hp: 7, enemy: true })
+    await fireEvent.click(screen.getByRole('button', { name: /delete all/i }))
+    expect(catalogNames()).toEqual(['Goblin'])
   })
 
   it('restores the catalog from storage on reload', async () => {

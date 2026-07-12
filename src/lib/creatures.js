@@ -34,9 +34,7 @@ export function setCa(creature, value) {
 
 export function toggleCondition(creature, key) {
   const has = creature.conditions.includes(key)
-  const conditions = has
-    ? creature.conditions.filter((c) => c !== key)
-    : [...creature.conditions, key]
+  const conditions = has ? creature.conditions.filter((c) => c !== key) : [...creature.conditions, key]
   return { ...creature, conditions }
 }
 

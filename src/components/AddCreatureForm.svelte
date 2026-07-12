@@ -8,9 +8,7 @@
   let initiative = $state('')
   let isPlayer = $state(true)
 
-  const isValid = $derived(
-    name.trim() !== '' && hp !== '' && (!showInitiative || initiative !== ''),
-  )
+  const isValid = $derived(name.trim() !== '' && hp !== '' && (!showInitiative || initiative !== ''))
 
   function reset() {
     name = ''
@@ -21,14 +19,21 @@
     isPlayer = true
   }
 
+  function buildCreature() {
+    return {
+      name: name.trim(),
+      hp: Number(hp),
+      isPlayer,
+      ...(showInitiative ? { initiative: Number(initiative) } : {}),
+      ...(maxHp !== '' ? { maxHp: Number(maxHp) } : {}),
+      ...(ca !== '' ? { ca: Number(ca) } : {}),
+    }
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
     if (!isValid) return
-    const creature = { name: name.trim(), hp: Number(hp), isPlayer }
-    if (showInitiative) creature.initiative = Number(initiative)
-    if (maxHp !== '') creature.maxHp = Number(maxHp)
-    if (ca !== '') creature.ca = Number(ca)
-    onAdd(creature)
+    onAdd(buildCreature())
     reset()
   }
 </script>

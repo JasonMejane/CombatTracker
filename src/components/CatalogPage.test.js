@@ -62,6 +62,18 @@ describe('CatalogPage', () => {
     expect(onSetHp).toHaveBeenCalledWith(goblin.id, 9)
   })
 
+  it('triggers onClear from the delete-all button', async () => {
+    const onClear = vi.fn()
+    render(CatalogPage, { catalog: [enemy('Goblin')], onClear })
+    await fireEvent.click(screen.getByRole('button', { name: /delete all/i }))
+    expect(onClear).toHaveBeenCalled()
+  })
+
+  it('disables delete all when the catalog is empty', () => {
+    render(CatalogPage, { catalog: [] })
+    expect(screen.getByRole('button', { name: /delete all/i })).toBeDisabled()
+  })
+
   it('propagates a CA edit from a row', async () => {
     const onSetCa = vi.fn()
     const goblin = enemy('Goblin')

@@ -3,8 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import CreatureList from './CreatureList.svelte'
 import { createCreature } from '../lib/creatures.js'
 
-const make = (name, initiative, isPlayer = true) =>
-  createCreature({ name, hp: 10, initiative, isPlayer })
+const make = (name, initiative, isPlayer = true) => createCreature({ name, hp: 10, initiative, isPlayer })
 
 describe('CreatureList', () => {
   it('renders one row per creature', () => {
