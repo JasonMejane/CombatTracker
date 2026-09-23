@@ -1,31 +1,37 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { loadState, saveState, loadCatalog, saveCatalog } from './storage.js'
+import { loadState, saveState, loadCatalog, saveCatalog, loadPrefs, savePrefs } from './storage.js'
 import { createCreature } from './creatures.js'
 
 describe('storage', () => {
   beforeEach(() => localStorage.clear())
 
   it('returns an empty default when nothing is stored', () => {
-    expect(loadState()).toEqual({ creatures: [], activeCreatureId: null })
+    expect(loadState()).toEqual({ creatures: [], activeCreatureId: null, round: 1 })
   })
 
   it('round-trips saved state', () => {
     const state = {
       creatures: [createCreature({ name: 'Aragorn', hp: 24, initiative: 18, isPlayer: true })],
       activeCreatureId: 'abc',
+      round: 4,
     }
     saveState(state)
     expect(loadState()).toEqual(state)
   })
 
-  it('persists only creatures and activeCreatureId', () => {
+  it('defaults the round to 1 for older saves', () => {
+    localStorage.setItem('combat-tracker-state', JSON.stringify({ creatures: [], activeCreatureId: null }))
+    expect(loadState().round).toBe(1)
+  })
+
+  it('persists only creatures, activeCreatureId and round', () => {
     saveState({ creatures: [], activeCreatureId: null, transient: 'ignore me' })
     expect(loadState()).not.toHaveProperty('transient')
   })
 
   it('returns the default when stored data is corrupt', () => {
     localStorage.setItem('combat-tracker-state', '{not valid json')
-    expect(loadState()).toEqual({ creatures: [], activeCreatureId: null })
+    expect(loadState()).toEqual({ creatures: [], activeCreatureId: null, round: 1 })
   })
 
   it('backfills fields missing from older saved creatures', () => {
@@ -89,5 +95,28 @@ describe('catalog storage', () => {
     expect(catalog[0].conditions).toEqual([])
     expect(catalog[0].tempHp).toBe(0)
     expect(catalog[0].ca).toBe(10)
+  })
+})
+
+describe('preferences storage', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('keeps the screen awake by default', () => {
+    expect(loadPrefs()).toEqual({ keepAwake: true })
+  })
+
+  it('round-trips saved preferences', () => {
+    savePrefs({ keepAwake: false })
+    expect(loadPrefs()).toEqual({ keepAwake: false })
+  })
+
+  it('falls back to the defaults when stored data is corrupt', () => {
+    localStorage.setItem('combat-tracker-prefs', '{oops')
+    expect(loadPrefs()).toEqual({ keepAwake: true })
+  })
+
+  it('fills in preferences missing from an older save', () => {
+    localStorage.setItem('combat-tracker-prefs', '{}')
+    expect(loadPrefs()).toEqual({ keepAwake: true })
   })
 })

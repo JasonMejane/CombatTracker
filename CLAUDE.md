@@ -34,44 +34,106 @@ Two layers, kept strictly apart:
   (`@typedef {import('./types.js').Creature}`); keep new lib functions annotated.
   - `creatures.js` — `createCreature` (armor class `ca` defaults to 10),
     `damage`/`heal`, `setTempHp`/`addTempHp`, `toggleCondition`, `setInitiative`,
-    `setCa`, `addDeathSave`/`deathState`/`revive`, `isDown`, `sortByInitiative`,
-    `nextActiveId`.
+    `setCa`, `rename`, `setMaxHp`, `addDeathSave` (`success`/`failure`/`nat1`/`nat20`)
+    /`deathState`/`revive`, `isDown`, `canAct`, `sortByInitiative`, `nextActiveId`,
+    `removeCreature` (hands the turn on when the active creature is removed),
+    `healthState` (`healthy` / `bloodied` ≤ ½ max HP / `critical` ≤ ¼ / `down`;
+    temp HP ignored — drives the HP bar colour).
   - `catalog.js` — reusable-creature templates: `createCatalogCreature` (delegates
     to `createCreature` with `initiative: 1`), `setBaseHp`, `sortByName`,
     `filterBySide`, `spawnFromCatalog` (fresh encounter creature: new id, chosen
     initiative, full HP, CA carried over, cleared conditions/temp HP/death saves),
     `uniqueEnemyName` (appends `Goblin 2`, `Goblin 3`, … when an enemy of that name
-    is already in the encounter).
+    is already in the encounter), `filterByName` (case-insensitive substring),
+    `spawnGroup(source, initiative, count, encounter)` (N enemy copies sharing one
+    initiative with numbered names; players always once) and `playersNotInEncounter`.
+  - `turns.js` — `nextTurn`/`previousTurn` over `{ activeCreatureId, round }`
+    (wrapping to the top starts a new round; stepping back before round 1's first
+    turn is a no-op). Built on `nextActiveId`/`previousActiveId`.
+  - `history.js` — undo stack: `record` (capped at 50 snapshots), `undo`, and
+    `describeHpChange(before, after)` for the "Orc −3 temp HP, −2 HP" toast label
+    (appends "· Concentration DC n" or "· Concentration lost"), `concentrationDc`
+    (half the damage taken incl. temp HP, min 10, max 30; null if not concentrating,
+    not hit, or dropped to 0).
   - `conditions.js` — `CONDITIONS` catalog (`key`/`label`/`emoji`) +
     `conditionEmoji`/`conditionLabel` lookups.
   - `dice.js` — `rollD20` (random integer 1–20) and `rollInitiative(bonus)`
-    (`rollD20() + bonus`); used by the NPC send flow.
-  - `storage.js` — `loadState`/`saveState` over `STORAGE_KEY` and
+    (`rollD20() + bonus`); used by the NPC send flow and the add form's 🎲 button.
+  - `storage.js` — `loadState`/`saveState` (`creatures`, `activeCreatureId`,
+    `round` — defaults to 1 for older saves) over `STORAGE_KEY` and
     `loadCatalog`/`saveCatalog` over `CATALOG_KEY` (separate keys); both return
     defaults on missing/corrupt JSON and backfill legacy creatures via
-    `normalizeCreature` (`conditions`/`tempHp`/`ca`).
+    `normalizeCreature` (`conditions`/`tempHp`/`ca`); `loadPrefs`/`savePrefs` over
+    `PREFS_KEY` (`{ keepAwake }`, default `true`).
+  - `wakeLock.js` — `createWakeLock({ nav, doc, onChange })` → `{ supported,
+update(wanted), destroy }`: a small side-effecting wrapper (injectable for tests)
+    over the Screen Wake Lock API. Re-requests on `visibilitychange` (browsers drop
+    the lock when the page is hidden), releases a lock granted after it stopped being
+    wanted, and swallows every refusal.
 - **`src/components/*.svelte` — presentation.** Stateless where possible; all
-  actions flow up through **callback props** (`onDamage`, `onAdd`, …), never
+  actions flow up through **callback props** (`onAdjustHp`, `onAdd`, …), never
   events or stores.
 
-`App.svelte` is the single source of truth: holds `creatures` + `activeCreatureId`
-and `catalog` as `$state`, persists each with its own `$effect` (`saveState` /
-`saveCatalog`), and wires every encounter handler by mapping over creatures through
-a `update(id, change)` helper that calls a pure `lib` function. A `view` `$state`
-(`'encounter'` | `'catalog'`) toggles the two pages via header tabs. `sendFromCatalog`
-spawns a catalog creature into `creatures` (de-duplicating enemy names with
-`uniqueEnemyName`) and switches back to the encounter; the catalog copy is kept.
+`App.svelte` is the single source of truth: holds `creatures` + `activeCreatureId` +
+`round` and `catalog` as `$state`, persists each with its own `$effect` (`saveState` /
+`saveCatalog`), and wires every encounter handler through a `change(id, apply,
+describe)` helper that calls a pure `lib` function. Every encounter change (turns
+included) goes through `commit(label, apply)`, which pushes a `$state.snapshot` onto
+the in-memory `history` (not persisted) and shows a 5 s `Toast` with the label and an
+Undo button (turn changes pass `label: null`, so no toast). Nothing uses the
+browser's `confirm()`: undoable encounter actions (e.g. removing a combatant) just
+act and rely on Undo, while New encounter and catalog deletes go through
+`askThen(question, action)` → `ConfirmDialog` (in-app `alertdialog`, focus on
+Cancel, Escape/backdrop cancel). While `prefs.keepAwake` and combat is running
+(`activeCreatureId !== null`) an `$effect` asks `wakeLock.update(true)`; the header's
+`AwakeToggle` (☀, `aria-pressed`, glows while the lock is actually held) only renders
+when `wakeLock.supported`. On the encounter page the header's `New encounter` button
+sits just left of it (visible text shortened to "New" under 420px). The header tabs are a WAI-ARIA `tablist`
+(`aria-selected`, roving `tabindex`, ←/→ keys) controlling one `tabpanel`. `hpTargetId` opens the
+shared `HpSheet` (numpad bottom sheet: Damage / Heal / Temp HP) for one creature.
+A `view` `$state`
+(`'encounter'` | `'catalog'`) toggles the two pages via header tabs (the Encounter tab
+shows a combatant count). `sendFromCatalog(id, initiative, count)` spawns a
+`spawnGroup` into `creatures` and `sendParty` spawns the chosen players; both go
+through `commit` (undoable toast) and **stay on the catalog**. The catalog copy is
+kept. Catalog edits (`editCatalog`, HP/AC, add/delete) are not in the undo history.
+`addCreature` also adds a catalog template when the form sets `saveToCatalog`. The
+dock (toast slot + `TurnBar`) renders on both views; `TurnBar` only on the encounter.
 
-Component tree: `App → CreatureList → CreatureRow → { HpBar, ConditionPicker }`,
-plus `AddCreatureRow` and `InstallButton` for the encounter, and
-`App → CatalogPage → CatalogRow → SendToEncounterForm` (with `AddCreatureRow`
-`showInitiative={false}`) for the catalog. `AddCreatureRow` is a disclosure that
+Component tree: `App → CreatureList → CreatureRow → { HpBar, ConditionPicker, EditCreatureForm }`,
+plus `AddCreatureRow`, `InstallButton`, `HpSheet` and a sticky bottom dock
+(`Toast` above `TurnBar`: ◀ previous turn, round + whose turn, ↶ undo, Next turn ▶)
+for the encounter, and
+`App → CatalogPage → { CatalogRow → { SendToEncounterForm, EditCreatureForm },
+SendPartyForm }` (with `AddCreatureRow` `showInitiative={false}`) for the catalog.
+`CatalogPage` has a search box and a `Send party` toggle (shown while catalog
+players are missing from the encounter); `CatalogRow`'s ✎ opens `EditCreatureForm`
+with `removeLabel="Delete from catalog"` — delete lives only there, away from Send.
+`SendToEncounterForm` calls `onSend(initiative, count)` (Count/Bonus/Roll for NPCs).
+`AddCreatureForm` starts with a coloured Player/Enemy segmented toggle, offers 🎲 +
+`Init bonus` for enemies, and an `Also save to catalog` checkbox when
+`offerSaveToCatalog` (encounter only). `AddCreatureRow` is a disclosure that
 renders below each list: a collapsed `＋ Add creature` button that reveals the shared
 `AddCreatureForm` when clicked and auto-closes after a successful add (mirroring the
 `CreatureRow` `+ Add condition` → `ConditionPicker` pattern). `CreatureList` owns the
-`sortByInitiative` ordering; `CatalogPage` owns `sortByName` + `filterBySide`.
+`sortByInitiative` ordering; `CatalogPage` (side filters are `aria-pressed`) owns `sortByName` + `filterBySide` +
+`filterByName`.
 Both `CreatureRow` (initiative + CA) and `CatalogRow` (HP + CA) use the same
-click-to-edit inline pattern (commits on Enter/blur).
+click-to-edit inline pattern (commits on Enter/blur). `CreatureRow` is a compact flex
+column (name line / HP line / optional conditions line). The HP bar + ± is one button
+(`Adjust HP for <name>`, calls `onAdjustHp`) that opens `HpSheet`; for a downed
+player the line shows death-save pips + ✓ ✗ 1 20 buttons and a separate ± button.
+The row scrolls itself into view when it becomes active. The HP line also holds the
+🏷 `Add condition` toggle and, for a downed enemy/dead player, Revive; a third line of
+labelled condition chips (emoji + name, tap to remove) appears only when the
+creature has conditions. Its ✎ button toggles
+`EditCreatureForm` (name, max HP, remove from encounter — removal is confirmed in
+`App`). `HpBar` floats the change in effective HP (current + temp) after each update,
+is a `role="meter"` (value text like "7 of 10 HP, 3 temporary, bloodied") and colours
+its fill by `healthState` variant. Rows are neutral cards with a 5px player/enemy
+stripe on the left; the active row gets `aria-current`, an accent frame, a ▶ marker in
+the list gutter and a bolder name. Death-save pips are one `role="img"` with a
+"1 success, 2 failures" label; `TurnBar`'s status is `aria-live="polite"`.
 
 ## Conventions
 
@@ -86,7 +148,11 @@ click-to-edit inline pattern (commits on Enter/blur).
   non-mutating functions, tested in isolation, then wired into `App.svelte`.
 - **CSS** is plain and dark-themed via custom-property tokens in `app.css`
   (`--bg`, `--surface`, `--accent`, `--player`/`--enemy`, `--down`, `--border`,
-  `--text`/`--text-muted`). Reuse tokens; no CSS framework.
+  `--text`/`--text-muted`, `--hp-healthy`/`--hp-bloodied`/`--hp-critical`). Reuse tokens; no CSS framework. Size every button and inline field with
+  `height: var(--control)` (icon buttons square: `width` too) and tags such as
+  condition chips with `var(--chip)` — 36/28px for a mouse, 40/30px under
+  `pointer: coarse`. Don't size controls with vertical padding. Only the HpSheet
+  keypad/actions and the ConditionPicker tiles are deliberately larger.
 - Minimal changes; no unrelated refactors. Comments only where truly needed —
   let clear names carry the meaning.
 - **Tooling gate:** keep `npm run lint`, `npm run format:check` and `npm run check`
@@ -112,7 +178,13 @@ Creature {
 
 Behavior worth knowing: `damage` spends `tempHp` first; `heal` caps at `maxHp`;
 initiative sorts descending with players winning ties; `nextActiveId` wraps around
-the ordered list. Legacy saves missing `conditions`/`tempHp` are backfilled on load.
+the ordered list and skips creatures that can't act (`canAct`: downed enemies, dead
+players — dying/stable players keep their turn). 5e rules at 0 HP: a hit adds a failed
+death save (and knocks a stable creature back to dying); damage whose excess past 0
+reaches `maxHp` kills outright (massive damage); healing from 0 clears death saves;
+a natural 1 is two failures, a natural 20 revives at 1 HP; dropping to 0 ends
+`concentration`. `setMaxHp` never heals, only caps `currentHp`. Armor class is stored
+as `ca` but displayed as **AC** everywhere in the UI. Legacy saves missing `conditions`/`tempHp` are backfilled on load.
 Catalog creatures share this exact shape (with `initiative: 1`) and persist under a
 separate key; editing catalog HP (`setBaseHp`) sets `currentHp` and `maxHp` together.
 Sending asks only for initiative (default 0) — a creature's `ca` carries over

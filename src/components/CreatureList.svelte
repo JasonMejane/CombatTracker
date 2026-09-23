@@ -5,14 +5,14 @@
   let {
     creatures,
     activeCreatureId = null,
-    onDamage = () => {},
-    onHeal = () => {},
     onDeathSave = () => {},
     onRevive = () => {},
     onToggleCondition = () => {},
-    onAddTemp = () => {},
     onSetInitiative = () => {},
     onSetCa = () => {},
+    onEdit = () => {},
+    onRemove = () => {},
+    onAdjustHp = () => {},
   } = $props()
 
   const ordered = $derived(sortByInitiative(creatures))
@@ -27,14 +27,14 @@
         <CreatureRow
           {creature}
           isActive={creature.id === activeCreatureId}
-          onDamage={(amount) => onDamage(creature.id, amount)}
-          onHeal={(amount) => onHeal(creature.id, amount)}
           onDeathSave={(kind) => onDeathSave(creature.id, kind)}
           onRevive={() => onRevive(creature.id)}
           onToggleCondition={(key) => onToggleCondition(creature.id, key)}
-          onAddTemp={(value) => onAddTemp(creature.id, value)}
           onSetInitiative={(value) => onSetInitiative(creature.id, value)}
           onSetCa={(value) => onSetCa(creature.id, value)}
+          onEdit={(changes) => onEdit(creature.id, changes)}
+          onRemove={() => onRemove(creature.id)}
+          onAdjustHp={() => onAdjustHp(creature.id)}
         />
       </li>
     {/each}
@@ -45,10 +45,10 @@
   .creature-list {
     list-style: none;
     margin: 0;
-    padding: 12px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .empty {
     padding: 32px 16px;

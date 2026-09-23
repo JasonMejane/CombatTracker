@@ -14,6 +14,12 @@ import {
   addTempHp,
   setInitiative,
   setCa,
+  rename,
+  setMaxHp,
+  canAct,
+  removeCreature,
+  previousActiveId,
+  healthState,
 } from './creatures.js'
 
 describe('createCreature', () => {
@@ -213,7 +219,84 @@ describe('damage', () => {
   })
 })
 
+describe('damage at 0 HP', () => {
+  const hero = () => createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true })
+  const downed = () => damage(hero(), 10)
+
+  it('adds a failed death save', () => {
+    expect(damage(downed(), 3).deathSaves).toEqual({ successes: 0, failures: 1 })
+  })
+
+  it('keeps existing successes while dying', () => {
+    const c = addDeathSave(downed(), 'success')
+    expect(damage(c, 3).deathSaves).toEqual({ successes: 1, failures: 1 })
+  })
+
+  it('knocks a stable creature back to dying with one failure', () => {
+    let c = downed()
+    for (let i = 0; i < 3; i++) c = addDeathSave(c, 'success')
+    const hit = damage(c, 2)
+    expect(hit.deathSaves).toEqual({ successes: 0, failures: 1 })
+    expect(deathState(hit)).toBe('dying')
+  })
+
+  it('kills outright when the hit equals max HP', () => {
+    expect(deathState(damage(downed(), 10))).toBe('dead')
+  })
+
+  it('adds no failure when temp HP absorbs the whole hit', () => {
+    const c = setTempHp(downed(), 5)
+    expect(damage(c, 3).deathSaves).toEqual({ successes: 0, failures: 0 })
+  })
+
+  it('adds no failure for a zero-damage hit', () => {
+    expect(damage(downed(), 0).deathSaves).toEqual({ successes: 0, failures: 0 })
+  })
+})
+
+describe('damage and concentration', () => {
+  const caster = () => toggleCondition(createCreature({ name: 'Mage', hp: 10, initiative: 5, isPlayer: true }), 'concentration')
+
+  it('ends concentration when the creature drops to 0 HP', () => {
+    expect(damage(caster(), 10).conditions).toEqual([])
+  })
+
+  it('keeps concentration while the creature stays up', () => {
+    expect(damage(caster(), 9).conditions).toEqual(['concentration'])
+  })
+
+  it('keeps other conditions when dropping to 0 HP', () => {
+    const c = toggleCondition(caster(), 'poisoned')
+    expect(damage(c, 10).conditions).toEqual(['poisoned'])
+  })
+})
+
+describe('massive damage', () => {
+  const hero = () => createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true })
+
+  it('kills outright when the damage left after reaching 0 equals max HP', () => {
+    expect(deathState(damage(hero(), 20))).toBe('dead')
+  })
+
+  it('only knocks the creature down when the excess is below max HP', () => {
+    expect(deathState(damage(hero(), 19))).toBe('dying')
+  })
+})
+
 describe('heal', () => {
+  it('resets death saves when healing a creature at 0 HP', () => {
+    let c = damage(createCreature({ name: 'Elf', hp: 20, initiative: 8, isPlayer: true }), 20)
+    c = addDeathSave(addDeathSave(c, 'failure'), 'success')
+    const healed = heal(c, 4)
+    expect(healed.currentHp).toBe(4)
+    expect(healed.deathSaves).toEqual({ successes: 0, failures: 0 })
+  })
+
+  it('leaves death saves alone for a zero-point heal at 0 HP', () => {
+    const c = addDeathSave(damage(createCreature({ name: 'Elf', hp: 20, initiative: 8, isPlayer: true }), 20), 'failure')
+    expect(heal(c, 0).deathSaves).toEqual({ successes: 0, failures: 1 })
+  })
+
   it('increases currentHp', () => {
     const c = damage(createCreature({ name: 'Elf', hp: 20, initiative: 8, isPlayer: true }), 10)
     expect(heal(c, 5).currentHp).toBe(15)
@@ -264,6 +347,19 @@ describe('addDeathSave', () => {
     addDeathSave(c, 'failure')
     expect(c.deathSaves).toEqual({ successes: 0, failures: 0 })
   })
+
+  it('counts a natural 1 as two failures', () => {
+    const c = damage(createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true }), 10)
+    expect(addDeathSave(c, 'nat1').deathSaves).toEqual({ successes: 0, failures: 2 })
+  })
+
+  it('brings the creature back at 1 HP with cleared saves on a natural 20', () => {
+    let c = damage(createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true }), 10)
+    c = addDeathSave(c, 'failure')
+    const saved = addDeathSave(c, 'nat20')
+    expect(saved.currentHp).toBe(1)
+    expect(saved.deathSaves).toEqual({ successes: 0, failures: 0 })
+  })
 })
 
 describe('deathState', () => {
@@ -312,6 +408,129 @@ describe('nextActiveId', () => {
   it('returns null for an empty list', () => {
     expect(nextActiveId([], null)).toBe(null)
   })
+
+  it('skips a downed enemy', () => {
+    const orc = damage(createCreature({ name: 'Orc', hp: 5, initiative: 12, isPlayer: false }), 5)
+    expect(nextActiveId([a, orc, b], a.id)).toBe(b.id)
+  })
+
+  it('skips a dead player', () => {
+    let dead = damage(createCreature({ name: 'Dead', hp: 5, initiative: 12, isPlayer: true }), 5)
+    dead = addDeathSave(dead, 'nat1')
+    dead = addDeathSave(dead, 'failure')
+    expect(nextActiveId([a, dead, b], a.id)).toBe(b.id)
+  })
+
+  it('keeps a dying player in the rotation', () => {
+    const dying = damage(createCreature({ name: 'Dying', hp: 5, initiative: 12, isPlayer: true }), 5)
+    expect(nextActiveId([a, dying, b], a.id)).toBe(dying.id)
+  })
+
+  it('moves on from an active creature that just went down', () => {
+    const orc = damage(createCreature({ name: 'Orc', hp: 5, initiative: 12, isPlayer: false }), 5)
+    expect(nextActiveId([a, orc, b], orc.id)).toBe(b.id)
+  })
+
+  it('returns null when nobody can act', () => {
+    const orc = damage(createCreature({ name: 'Orc', hp: 5, initiative: 12, isPlayer: false }), 5)
+    expect(nextActiveId([orc], null)).toBe(null)
+  })
+})
+
+describe('previousActiveId', () => {
+  const a = createCreature({ name: 'A', hp: 1, initiative: 18, isPlayer: true })
+  const b = createCreature({ name: 'B', hp: 1, initiative: 10, isPlayer: true })
+  const orc = damage(createCreature({ name: 'Orc', hp: 5, initiative: 3, isPlayer: false }), 5)
+
+  it('steps back in initiative order', () => {
+    expect(previousActiveId([a, b], b.id)).toBe(a.id)
+  })
+
+  it('wraps from the first to the last creature that can act', () => {
+    expect(previousActiveId([a, b, orc], a.id)).toBe(b.id)
+  })
+})
+
+describe('canAct', () => {
+  const make = (isPlayer) => createCreature({ name: 'X', hp: 5, initiative: 1, isPlayer })
+
+  it('is true for a creature above 0 HP', () => {
+    expect(canAct(make(false))).toBe(true)
+  })
+
+  it('is false for a downed enemy', () => {
+    expect(canAct(damage(make(false), 5))).toBe(false)
+  })
+
+  it('is true for a dying player', () => {
+    expect(canAct(damage(make(true), 5))).toBe(true)
+  })
+
+  it('is false for a dead player', () => {
+    expect(canAct(damage(make(true), 10))).toBe(false)
+  })
+})
+
+describe('removeCreature', () => {
+  const a = createCreature({ name: 'A', hp: 1, initiative: 18, isPlayer: true })
+  const b = createCreature({ name: 'B', hp: 1, initiative: 10, isPlayer: true })
+  const c = createCreature({ name: 'C', hp: 1, initiative: 3, isPlayer: true })
+
+  it('drops the creature from the list', () => {
+    const result = removeCreature([a, b, c], null, b.id)
+    expect(result.creatures.map((x) => x.name)).toEqual(['A', 'C'])
+  })
+
+  it('keeps the active creature when another is removed', () => {
+    expect(removeCreature([a, b, c], a.id, b.id).activeCreatureId).toBe(a.id)
+  })
+
+  it('passes the turn to the next creature when the active one is removed', () => {
+    expect(removeCreature([a, b, c], b.id, b.id).activeCreatureId).toBe(c.id)
+  })
+
+  it('clears the turn when the last creature is removed', () => {
+    expect(removeCreature([a], a.id, a.id).activeCreatureId).toBe(null)
+  })
+
+  it('does not mutate the input list', () => {
+    const list = [a, b]
+    removeCreature(list, null, a.id)
+    expect(list).toHaveLength(2)
+  })
+})
+
+describe('rename', () => {
+  const base = () => createCreature({ name: 'Goblin', hp: 7, initiative: 5, isPlayer: false })
+
+  it('sets a trimmed name', () => {
+    expect(rename(base(), '  Goblin boss ').name).toBe('Goblin boss')
+  })
+
+  it('keeps the old name when the new one is blank', () => {
+    expect(rename(base(), '   ').name).toBe('Goblin')
+  })
+})
+
+describe('setMaxHp', () => {
+  const base = () => createCreature({ name: 'Hero', hp: 20, initiative: 5, isPlayer: true })
+
+  it('raises max HP without healing', () => {
+    const c = setMaxHp(damage(base(), 5), 30)
+    expect(c).toMatchObject({ maxHp: 30, currentHp: 15 })
+  })
+
+  it('caps current HP when max HP drops below it', () => {
+    expect(setMaxHp(base(), 12)).toMatchObject({ maxHp: 12, currentHp: 12 })
+  })
+
+  it('never goes below 1', () => {
+    expect(setMaxHp(base(), 0).maxHp).toBe(1)
+  })
+
+  it('coerces a numeric string', () => {
+    expect(setMaxHp(base(), '25').maxHp).toBe(25)
+  })
 })
 
 describe('setInitiative', () => {
@@ -348,5 +567,29 @@ describe('revive', () => {
     const c = damage(createCreature({ name: 'Hero', hp: 10, initiative: 5, isPlayer: true }), 10)
     revive(c)
     expect(c.currentHp).toBe(0)
+  })
+})
+
+describe('healthState', () => {
+  const at = (currentHp, maxHp = 40) => ({ ...createCreature({ name: 'X', hp: maxHp, initiative: 1, isPlayer: true }), currentHp })
+
+  it('is healthy above half HP', () => {
+    expect(healthState(at(21))).toBe('healthy')
+  })
+
+  it('is bloodied at exactly half HP', () => {
+    expect(healthState(at(20))).toBe('bloodied')
+  })
+
+  it('is critical at a quarter HP or less', () => {
+    expect(healthState(at(10))).toBe('critical')
+  })
+
+  it('is down at 0 HP', () => {
+    expect(healthState(at(0))).toBe('down')
+  })
+
+  it('ignores temporary HP', () => {
+    expect(healthState(setTempHp(at(10), 30))).toBe('critical')
   })
 })

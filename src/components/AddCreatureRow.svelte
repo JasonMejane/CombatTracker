@@ -1,7 +1,7 @@
 <script>
   import AddCreatureForm from './AddCreatureForm.svelte'
 
-  let { onAdd = () => {}, showInitiative = true } = $props()
+  let { onAdd = () => {}, showInitiative = true, offerSaveToCatalog = false } = $props()
 
   let open = $state(false)
 
@@ -17,7 +17,7 @@
   </button>
 
   {#if open}
-    <AddCreatureForm onAdd={handleAdd} {showInitiative} />
+    <AddCreatureForm onAdd={handleAdd} {showInitiative} {offerSaveToCatalog} />
   {/if}
 </div>
 
@@ -31,9 +31,9 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 48px;
-    margin: 0 12px 12px;
-    padding: 12px 16px;
+    height: var(--control);
+    margin: 0 8px 8px;
+    padding: 0 16px;
     font-weight: 700;
     color: var(--accent);
     background: transparent;

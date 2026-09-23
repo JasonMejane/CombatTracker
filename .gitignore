@@ -29,3 +29,5 @@ screenshots
 *.njsproj
 *.sln
 *.sw?
+
+.claude

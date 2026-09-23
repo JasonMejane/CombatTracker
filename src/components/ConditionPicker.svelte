@@ -26,7 +26,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     gap: 6px;
-    padding: 10px;
+    padding: 8px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -36,7 +36,7 @@
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 8px 4px;
+    padding: 6px 4px;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;

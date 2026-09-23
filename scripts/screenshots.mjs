@@ -36,8 +36,11 @@ const state = {
     creature('a', 'Aria Longname the Bard', true, { conditions: ['poisoned', 'prone'] }),
     creature('b', 'Goblin', false, { currentHp: 5, tempHp: 4 }),
     creature('c', 'Ancient Red Dragon', false, { maxHp: 300, currentHp: 300, initiative: 20 }),
+    creature('d', 'Thorin', true, { currentHp: 0, initiative: 10, deathSaves: { successes: 1, failures: 1 } }),
+    creature('e', 'Goblin 2', false, { maxHp: 7, currentHp: 0, initiative: 8 }),
   ],
   activeCreatureId: 'a',
+  round: 2,
 }
 const catalog = [
   creature('k1', 'Goblin', false),
@@ -75,7 +78,7 @@ async function captureView(ctx, target, ori, w, h) {
   await page.setViewportSize({ width: w, height: h })
   await page.goto(BASE, { waitUntil: 'networkidle' })
   await shoot(page, `${target.name}-${ori}-encounter`)
-  await page.getByRole('button', { name: 'Catalog' }).click()
+  await page.getByRole('tab', { name: 'Catalog' }).click()
   await shoot(page, `${target.name}-${ori}-catalog`)
   console.log(`${target.name}-${ori}: hOverflow=${await overflow(page)}px`)
   await page.close()

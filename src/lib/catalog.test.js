@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { createCatalogCreature, setBaseHp, sortByName, filterBySide, spawnFromCatalog, uniqueEnemyName } from './catalog.js'
+import {
+  createCatalogCreature,
+  setBaseHp,
+  sortByName,
+  filterBySide,
+  filterByName,
+  spawnFromCatalog,
+  spawnGroup,
+  playersNotInEncounter,
+  uniqueEnemyName,
+} from './catalog.js'
 
 describe('createCatalogCreature', () => {
   it('builds a full-HP template with initiative 1', () => {
@@ -154,5 +164,66 @@ describe('spawnFromCatalog', () => {
     spawnFromCatalog(src, 14)
     expect(src.currentHp).toBe(3)
     expect(src.conditions).toEqual(['poisoned'])
+  })
+})
+
+describe('filterByName', () => {
+  const named = (name) => createCatalogCreature({ name, hp: 1, isPlayer: false })
+  const list = [named('Goblin'), named('Goblin boss'), named('Owlbear')]
+
+  it('returns everything for a blank query', () => {
+    expect(filterByName(list, '  ')).toHaveLength(3)
+  })
+
+  it('matches a case-insensitive substring', () => {
+    expect(filterByName(list, 'GOB').map((c) => c.name)).toEqual(['Goblin', 'Goblin boss'])
+  })
+
+  it('ignores surrounding spaces', () => {
+    expect(filterByName(list, ' owl ').map((c) => c.name)).toEqual(['Owlbear'])
+  })
+})
+
+describe('spawnGroup', () => {
+  const goblin = () => createCatalogCreature({ name: 'Goblin', hp: 7, isPlayer: false })
+  const hero = () => createCatalogCreature({ name: 'Aria', hp: 20, isPlayer: true })
+
+  it('spawns the requested number of copies sharing one initiative', () => {
+    const group = spawnGroup(goblin(), 12, 3, [])
+    expect(group).toHaveLength(3)
+    expect(group.every((c) => c.initiative === 12)).toBe(true)
+  })
+
+  it('numbers enemy copies after those already in the encounter', () => {
+    const encounter = [spawnFromCatalog(goblin(), 5)]
+    expect(spawnGroup(goblin(), 12, 2, encounter).map((c) => c.name)).toEqual(['Goblin 2', 'Goblin 3'])
+  })
+
+  it('gives each copy its own id', () => {
+    const [a, b] = spawnGroup(goblin(), 12, 2, [])
+    expect(a.id).not.toBe(b.id)
+  })
+
+  it('keeps a player name as is and sends a single copy', () => {
+    expect(spawnGroup(hero(), 15, 3, []).map((c) => c.name)).toEqual(['Aria'])
+  })
+
+  it('sends at least one copy', () => {
+    expect(spawnGroup(goblin(), 12, 0, [])).toHaveLength(1)
+  })
+})
+
+describe('playersNotInEncounter', () => {
+  const aria = createCatalogCreature({ name: 'Aria', hp: 20, isPlayer: true })
+  const thorin = createCatalogCreature({ name: 'Thorin', hp: 30, isPlayer: true })
+  const goblin = createCatalogCreature({ name: 'Goblin', hp: 7, isPlayer: false })
+
+  it('lists catalog players alphabetically', () => {
+    expect(playersNotInEncounter([thorin, goblin, aria], []).map((c) => c.name)).toEqual(['Aria', 'Thorin'])
+  })
+
+  it('skips players already in the encounter', () => {
+    const encounter = [spawnFromCatalog(aria, 10)]
+    expect(playersNotInEncounter([thorin, aria], encounter).map((c) => c.name)).toEqual(['Thorin'])
   })
 })

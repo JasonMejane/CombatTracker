@@ -31,41 +31,57 @@ describe('CatalogRow', () => {
     expect(row(container)).toHaveClass('enemy')
   })
 
-  it('removes the creature', async () => {
+  it('keeps delete out of reach until the edit panel is opened', () => {
+    render(CatalogRow, { creature: goblin() })
+    expect(screen.queryByRole('button', { name: /delete from catalog/i })).not.toBeInTheDocument()
+  })
+
+  it('deletes the creature from the edit panel', async () => {
     const onRemove = vi.fn()
     render(CatalogRow, { creature: goblin(), onRemove })
-    await fireEvent.click(screen.getByRole('button', { name: /remove/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /edit goblin/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /delete from catalog/i }))
     expect(onRemove).toHaveBeenCalled()
+  })
+
+  it('saves a rename from the edit panel and closes it', async () => {
+    const onEdit = vi.fn()
+    render(CatalogRow, { creature: goblin(), onEdit })
+    await fireEvent.click(screen.getByRole('button', { name: /edit goblin/i }))
+    await fireEvent.input(screen.getByLabelText(/^name$/i), { target: { value: 'Hobgoblin' } })
+    await fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    expect(onEdit).toHaveBeenCalledWith({ name: 'Hobgoblin', maxHp: 7 })
+    expect(screen.queryByLabelText(/^name$/i)).not.toBeInTheDocument()
   })
 })
 
 describe('CatalogRow armor class', () => {
   it('shows the armor class beside the name', () => {
     render(CatalogRow, { creature: goblin({ ca: 15 }) })
-    expect(screen.getByText('CA 15')).toBeInTheDocument()
+    expect(screen.getByText('AC 15')).toBeInTheDocument()
   })
 
-  it('reveals an input seeded with the current CA when clicked', async () => {
+  it('reveals an input seeded with the current AC when clicked', async () => {
     render(CatalogRow, { creature: goblin({ ca: 15 }) })
-    await fireEvent.click(screen.getByText('CA 15'))
-    expect(screen.getByLabelText('CA')).toHaveValue(15)
+    await fireEvent.click(screen.getByText('AC 15'))
+    expect(screen.getByLabelText('AC')).toHaveValue(15)
   })
 
-  it('commits the new CA on blur', async () => {
+  it('commits the new AC on blur', async () => {
     const onSetCa = vi.fn()
     render(CatalogRow, { creature: goblin({ ca: 15 }), onSetCa })
-    await fireEvent.click(screen.getByText('CA 15'))
-    const input = screen.getByLabelText('CA')
+    await fireEvent.click(screen.getByText('AC 15'))
+    const input = screen.getByLabelText('AC')
     await fireEvent.input(input, { target: { value: '13' } })
     await fireEvent.blur(input)
     expect(onSetCa).toHaveBeenCalledWith(13)
   })
 
-  it('commits the new CA on Enter', async () => {
+  it('commits the new AC on Enter', async () => {
     const onSetCa = vi.fn()
     render(CatalogRow, { creature: goblin({ ca: 15 }), onSetCa })
-    await fireEvent.click(screen.getByText('CA 15'))
-    const input = screen.getByLabelText('CA')
+    await fireEvent.click(screen.getByText('AC 15'))
+    const input = screen.getByLabelText('AC')
     await fireEvent.input(input, { target: { value: '11' } })
     await fireEvent.keyDown(input, { key: 'Enter' })
     expect(onSetCa).toHaveBeenCalledWith(11)
@@ -118,7 +134,7 @@ describe('CatalogRow sending', () => {
     await fireEvent.click(screen.getByRole('button', { name: /send to encounter/i }))
     await fireEvent.input(screen.getByLabelText(/initiative/i), { target: { value: '14' } })
     await fireEvent.click(screen.getByRole('button', { name: /^send$/i }))
-    expect(onSend).toHaveBeenCalledWith(14)
+    expect(onSend).toHaveBeenCalledWith(14, 1)
   })
 
   it('hides the send form after sending', async () => {

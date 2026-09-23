@@ -2,6 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/svelte'
 import { describe, it, expect, vi } from 'vitest'
 import AddCreatureForm from './AddCreatureForm.svelte'
 
+vi.mock('../lib/dice.js', () => ({
+  rollInitiative: (bonus) => 15 + Number(bonus),
+}))
+
 async function fill({ name, hp, maxHp, initiative }) {
   if (name !== undefined) await fireEvent.input(screen.getByLabelText(/name/i), { target: { value: name } })
   if (hp !== undefined) await fireEvent.input(screen.getByLabelText('HP'), { target: { value: hp } })
@@ -38,7 +42,7 @@ describe('AddCreatureForm', () => {
     const onAdd = vi.fn()
     render(AddCreatureForm, { onAdd })
     await fill({ name: 'Knight', hp: '20', initiative: '9' })
-    await fireEvent.input(screen.getByLabelText('CA'), { target: { value: '18' } })
+    await fireEvent.input(screen.getByLabelText('AC'), { target: { value: '18' } })
     await fireEvent.click(screen.getByRole('button', { name: /add/i }))
     expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: 'Knight', ca: 18 }))
   })
@@ -93,7 +97,7 @@ describe('AddCreatureForm without initiative', () => {
 
   it('still offers the armor-class field', () => {
     render(AddCreatureForm, { onAdd: vi.fn(), showInitiative: false })
-    expect(screen.getByLabelText('CA')).toBeInTheDocument()
+    expect(screen.getByLabelText('AC')).toBeInTheDocument()
   })
 
   it('submits name and hp without an initiative key', async () => {
@@ -110,5 +114,50 @@ describe('AddCreatureForm without initiative', () => {
     await fill({ name: 'Goblin', hp: '7' })
     await fireEvent.click(screen.getByRole('button', { name: /add/i }))
     expect(onAdd).toHaveBeenCalled()
+  })
+})
+
+describe('AddCreatureForm save to catalog', () => {
+  it('does not offer it unless asked', () => {
+    render(AddCreatureForm, { onAdd: vi.fn() })
+    expect(screen.queryByLabelText(/save to catalog/i)).not.toBeInTheDocument()
+  })
+
+  it('is off by default', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd, offerSaveToCatalog: true })
+    await fill({ name: 'Gimli', hp: '30', initiative: '9' })
+    await fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+    expect(onAdd).toHaveBeenCalledWith({ name: 'Gimli', hp: 30, initiative: 9, isPlayer: true })
+  })
+
+  it('flags the creature for the catalog when ticked', async () => {
+    const onAdd = vi.fn()
+    render(AddCreatureForm, { onAdd, offerSaveToCatalog: true })
+    await fill({ name: 'Gimli', hp: '30', initiative: '9' })
+    await fireEvent.click(screen.getByLabelText(/save to catalog/i))
+    await fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ name: 'Gimli', saveToCatalog: true }))
+  })
+})
+
+describe('AddCreatureForm initiative roll', () => {
+  it('offers no roll for a player', () => {
+    render(AddCreatureForm, { onAdd: vi.fn() })
+    expect(screen.queryByRole('button', { name: /roll/i })).not.toBeInTheDocument()
+  })
+
+  it('rolls an enemy initiative from the die plus its bonus', async () => {
+    render(AddCreatureForm, { onAdd: vi.fn() })
+    await fireEvent.click(screen.getByLabelText(/enemy/i))
+    await fireEvent.input(screen.getByLabelText(/init bonus/i), { target: { value: '2' } })
+    await fireEvent.click(screen.getByRole('button', { name: /roll/i }))
+    expect(screen.getByLabelText(/^initiative$/i)).toHaveValue(17)
+  })
+
+  it('offers no roll without an initiative field', async () => {
+    render(AddCreatureForm, { onAdd: vi.fn(), showInitiative: false })
+    await fireEvent.click(screen.getByLabelText(/enemy/i))
+    expect(screen.queryByRole('button', { name: /roll/i })).not.toBeInTheDocument()
   })
 })

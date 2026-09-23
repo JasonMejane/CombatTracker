@@ -40,4 +40,10 @@ describe('AddCreatureRow', () => {
     await fireEvent.click(toggle())
     expect(screen.queryByLabelText(/initiative/i)).not.toBeInTheDocument()
   })
+
+  it('passes the save-to-catalog option through to the form', async () => {
+    render(AddCreatureRow, { onAdd: vi.fn(), offerSaveToCatalog: true })
+    await fireEvent.click(toggle())
+    expect(screen.getByLabelText(/save to catalog/i)).toBeInTheDocument()
+  })
 })

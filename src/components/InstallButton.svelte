@@ -28,7 +28,8 @@
 
 <style>
   .install {
-    padding: 10px 16px;
+    height: var(--control);
+    padding: 0 14px;
     font-weight: 700;
     color: var(--accent);
     background: transparent;

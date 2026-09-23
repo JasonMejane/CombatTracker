@@ -21,6 +21,14 @@ describe('CatalogPage', () => {
     expect(names()).toEqual(['Aragorn', 'Goblin', 'Zombie'])
   })
 
+  it('reports which side filter is on', async () => {
+    render(CatalogPage, { catalog: [player('Aragorn')] })
+    expect(screen.getByRole('button', { name: /^all$/i })).toHaveAttribute('aria-pressed', 'true')
+    await fireEvent.click(screen.getByRole('button', { name: /players/i }))
+    expect(screen.getByRole('button', { name: /players/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^all$/i })).toHaveAttribute('aria-pressed', 'false')
+  })
+
   it('filters to players only', async () => {
     render(CatalogPage, { catalog: [player('Aragorn'), enemy('Goblin')] })
     await fireEvent.click(screen.getByRole('button', { name: /players/i }))
@@ -48,7 +56,8 @@ describe('CatalogPage', () => {
     const onRemove = vi.fn()
     const goblin = enemy('Goblin')
     render(CatalogPage, { catalog: [goblin], onRemove })
-    await fireEvent.click(screen.getByRole('button', { name: /remove/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /edit goblin/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /delete from catalog/i }))
     expect(onRemove).toHaveBeenCalledWith(goblin.id)
   })
 
@@ -75,11 +84,11 @@ describe('CatalogPage', () => {
     expect(screen.getByRole('button', { name: /delete all/i })).toBeDisabled()
   })
 
-  it('propagates a CA edit from a row', async () => {
+  it('propagates a AC edit from a row', async () => {
     const onSetCa = vi.fn()
     const goblin = enemy('Goblin')
     render(CatalogPage, { catalog: [goblin], onSetCa })
-    await fireEvent.click(screen.getByText(`CA ${goblin.ca}`))
+    await fireEvent.click(screen.getByText(`AC ${goblin.ca}`))
     const input = document.querySelector('.catalog-row .ca-input')
     await fireEvent.input(input, { target: { value: '13' } })
     await fireEvent.blur(input)
@@ -93,6 +102,66 @@ describe('CatalogPage', () => {
     await fireEvent.click(screen.getByRole('button', { name: /send to encounter/i }))
     await fireEvent.input(screen.getByLabelText(/initiative/i), { target: { value: '14' } })
     await fireEvent.click(screen.getByRole('button', { name: /^send$/i }))
-    expect(onSend).toHaveBeenCalledWith(goblin.id, 14)
+    expect(onSend).toHaveBeenCalledWith(goblin.id, 14, 1)
+  })
+
+  it('propagates an edit from a row', async () => {
+    const onEdit = vi.fn()
+    const goblin = enemy('Goblin')
+    render(CatalogPage, { catalog: [goblin], onEdit })
+    await fireEvent.click(screen.getByRole('button', { name: /edit goblin/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    expect(onEdit).toHaveBeenCalledWith(goblin.id, { name: 'Goblin', maxHp: 7 })
+  })
+})
+
+describe('CatalogPage search', () => {
+  it('filters rows by name', async () => {
+    render(CatalogPage, { catalog: [enemy('Goblin'), enemy('Goblin boss'), enemy('Owlbear')] })
+    await fireEvent.input(screen.getByRole('searchbox', { name: /search/i }), { target: { value: 'gob' } })
+    expect(names()).toEqual(['Goblin', 'Goblin boss'])
+  })
+
+  it('combines with the side filter', async () => {
+    render(CatalogPage, { catalog: [player('Gobbo'), enemy('Goblin')] })
+    await fireEvent.click(screen.getByRole('button', { name: /enemies/i }))
+    await fireEvent.input(screen.getByRole('searchbox', { name: /search/i }), { target: { value: 'gob' } })
+    expect(names()).toEqual(['Goblin'])
+  })
+
+  it('says when nothing matches', async () => {
+    render(CatalogPage, { catalog: [enemy('Goblin')] })
+    await fireEvent.input(screen.getByRole('searchbox', { name: /search/i }), { target: { value: 'dragon' } })
+    expect(screen.getByText(/no creature matches/i)).toBeInTheDocument()
+  })
+
+  it('has no search box while the catalog is empty', () => {
+    render(CatalogPage, { catalog: [] })
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+  })
+})
+
+describe('CatalogPage party', () => {
+  it('offers to send the party when players are missing from the encounter', () => {
+    render(CatalogPage, { catalog: [player('Aria'), enemy('Goblin')], encounter: [] })
+    expect(screen.getByRole('button', { name: /send party/i })).toBeInTheDocument()
+  })
+
+  it('hides the party button once every player is fighting', () => {
+    const aria = player('Aria')
+    render(CatalogPage, { catalog: [aria], encounter: [{ ...aria, id: 'x' }] })
+    expect(screen.queryByRole('button', { name: /send party/i })).not.toBeInTheDocument()
+  })
+
+  it('sends the party and closes the panel', async () => {
+    const onSendParty = vi.fn()
+    const aria = player('Aria')
+    render(CatalogPage, { catalog: [aria], encounter: [], onSendParty })
+    await fireEvent.click(screen.getByRole('button', { name: /send party/i }))
+    await fireEvent.input(screen.getByLabelText('Initiative for Aria'), { target: { value: '12' } })
+    const [, submit] = screen.getAllByRole('button', { name: /send party/i })
+    await fireEvent.click(submit)
+    expect(onSendParty).toHaveBeenCalledWith([{ id: aria.id, initiative: 12 }])
+    expect(screen.queryByLabelText('Initiative for Aria')).not.toBeInTheDocument()
   })
 })

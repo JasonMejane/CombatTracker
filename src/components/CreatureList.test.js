@@ -43,13 +43,12 @@ describe('CreatureList', () => {
     expect(screen.getByText(/no combatants/i)).toBeInTheDocument()
   })
 
-  it('forwards damage with the creature id and amount', async () => {
-    const onDamage = vi.fn()
+  it('forwards HP adjust requests with the creature id', async () => {
+    const onAdjustHp = vi.fn()
     const c = make('Target', 5)
-    render(CreatureList, { creatures: [c], onDamage })
-    await fireEvent.input(screen.getByLabelText(/amount/i), { target: { value: '3' } })
-    await fireEvent.click(screen.getByRole('button', { name: /damage/i }))
-    expect(onDamage).toHaveBeenCalledWith(c.id, 3)
+    render(CreatureList, { creatures: [c], onAdjustHp })
+    await fireEvent.click(screen.getByRole('button', { name: /adjust hp for target/i }))
+    expect(onAdjustHp).toHaveBeenCalledWith(c.id)
   })
 
   it('forwards revive with the creature id', async () => {
@@ -58,5 +57,23 @@ describe('CreatureList', () => {
     render(CreatureList, { creatures: [c], onRevive })
     await fireEvent.click(screen.getByRole('button', { name: /revive/i }))
     expect(onRevive).toHaveBeenCalledWith(c.id)
+  })
+
+  it('forwards edits with the creature id', async () => {
+    const onEdit = vi.fn()
+    const c = make('Target', 5)
+    render(CreatureList, { creatures: [c], onEdit })
+    await fireEvent.click(screen.getByRole('button', { name: /edit target/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    expect(onEdit).toHaveBeenCalledWith(c.id, { name: 'Target', maxHp: 10 })
+  })
+
+  it('forwards removal with the creature id', async () => {
+    const onRemove = vi.fn()
+    const c = make('Target', 5)
+    render(CreatureList, { creatures: [c], onRemove })
+    await fireEvent.click(screen.getByRole('button', { name: /edit target/i }))
+    await fireEvent.click(screen.getByRole('button', { name: /remove from encounter/i }))
+    expect(onRemove).toHaveBeenCalledWith(c.id)
   })
 })

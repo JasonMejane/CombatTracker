@@ -16,6 +16,16 @@
   --active-glow: #c9a227;
   --down: #4a423a;
 
+  /* HP bar by health band (5e "bloodied" is half HP or less) */
+  --hp-healthy: #4a8a5c;
+  --hp-bloodied: #d0822c;
+  --hp-critical: #b83b3b;
+
+  /* One height for every button and field (icon buttons are square), and a smaller
+     one for tags such as condition chips. Slightly larger for fingers. */
+  --control: 36px;
+  --chip: 28px;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/1.45 var(--sans);
@@ -49,6 +59,13 @@ body {
 button {
   font: inherit;
   cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --control: 40px;
+    --chip: 30px;
+  }
 }
 
 /* Tablet and up: cap the column so lines don't run too wide (adaptive single column). */

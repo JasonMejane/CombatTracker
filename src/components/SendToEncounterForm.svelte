@@ -5,10 +5,11 @@
 
   let initiative = $state(0)
   let bonus = $state(0)
+  let count = $state(1)
 
   function handleSubmit(event) {
     event.preventDefault()
-    onSend(Number(initiative))
+    onSend(Number(initiative), Math.max(1, Number(count) || 1))
   }
 
   function roll() {
@@ -28,6 +29,10 @@
       <span>Bonus</span>
       <input type="number" bind:value={bonus} />
     </label>
+    <label class="field">
+      <span>Count</span>
+      <input type="number" inputmode="numeric" min="1" bind:value={count} />
+    </label>
   {/if}
   <div class="actions">
     <button type="submit" class="send">Send</button>
@@ -41,7 +46,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--surface-2);
@@ -58,7 +63,8 @@
   }
   .field input {
     width: 4rem;
-    padding: 8px 6px;
+    height: var(--control);
+    padding: 0 6px;
     font: inherit;
     text-align: center;
     color: var(--text);
@@ -67,7 +73,8 @@
     border-radius: 8px;
   }
   button {
-    padding: 8px 12px;
+    height: var(--control);
+    padding: 0 12px;
     font-weight: 700;
     border-radius: 8px;
   }

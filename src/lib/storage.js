@@ -1,14 +1,15 @@
 /**
  * @typedef {import('./types.js').Creature} Creature
- * @typedef {{ creatures: Creature[], activeCreatureId: string | null }} EncounterState
+ * @typedef {{ creatures: Creature[], activeCreatureId: string | null, round: number }} EncounterState
  */
 
 const STORAGE_KEY = 'combat-tracker-state'
 const CATALOG_KEY = 'combat-tracker-catalog'
+const PREFS_KEY = 'combat-tracker-prefs'
 
 /** @returns {EncounterState} */
 function defaultState() {
-  return { creatures: [], activeCreatureId: null }
+  return { creatures: [], activeCreatureId: null, round: 1 }
 }
 
 /**
@@ -25,8 +26,8 @@ export function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return defaultState()
   try {
-    const { creatures, activeCreatureId } = JSON.parse(raw)
-    return { creatures: creatures.map(normalizeCreature), activeCreatureId }
+    const { creatures, activeCreatureId, round = 1 } = JSON.parse(raw)
+    return { creatures: creatures.map(normalizeCreature), activeCreatureId, round }
   } catch {
     return defaultState()
   }
@@ -35,8 +36,8 @@ export function loadState() {
 /**
  * @param {EncounterState} state
  */
-export function saveState({ creatures, activeCreatureId }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ creatures, activeCreatureId }))
+export function saveState({ creatures, activeCreatureId, round }) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ creatures, activeCreatureId, round }))
 }
 
 /** @returns {Creature[]} */
@@ -55,4 +56,27 @@ export function loadCatalog() {
  */
 export function saveCatalog(creatures) {
   localStorage.setItem(CATALOG_KEY, JSON.stringify(creatures))
+}
+
+/**
+ * @typedef {{ keepAwake: boolean }} Prefs
+ */
+
+/** @type {Prefs} */
+const DEFAULT_PREFS = { keepAwake: true }
+
+/** @returns {Prefs} */
+export function loadPrefs() {
+  try {
+    return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') }
+  } catch {
+    return { ...DEFAULT_PREFS }
+  }
+}
+
+/**
+ * @param {Prefs} prefs
+ */
+export function savePrefs(prefs) {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
 }
