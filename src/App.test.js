@@ -651,3 +651,55 @@ describe('App screen wake lock', () => {
     expect(screen.queryByRole('button', { name: /keep screen on/i })).not.toBeInTheDocument()
   })
 })
+
+describe('App update banner', () => {
+  const serve = (version) =>
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, json: async () => ({ version }) })),
+    )
+  const findBanner = () => screen.findByText(/new version is available/i)
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('tells the user when a newer version is deployed', async () => {
+    serve('a newer build')
+    render(App)
+    expect(await findBanner()).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /reload/i })).toBeInTheDocument()
+  })
+
+  it('stays hidden when the app is up to date', async () => {
+    serve(__APP_VERSION__)
+    render(App)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByText(/new version is available/i)).not.toBeInTheDocument()
+  })
+
+  it('can be dismissed', async () => {
+    serve('a newer build')
+    render(App)
+    await findBanner()
+    await fireEvent.click(screen.getByRole('button', { name: /dismiss/i }))
+    expect(screen.queryByText(/new version is available/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^encounter/i })).toHaveFocus()
+  })
+
+  it('floats in the bottom dock instead of pushing the page down', async () => {
+    serve('a newer build')
+    render(App)
+    const banner = await findBanner()
+    expect(document.querySelector('.dock')).toContainElement(banner)
+  })
+
+  it('does not come back after being dismissed', async () => {
+    serve('a newer build')
+    render(App)
+    await findBanner()
+    await fireEvent.click(screen.getByRole('button', { name: /dismiss/i }))
+    document.dispatchEvent(new Event('visibilitychange'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(screen.queryByText(/new version is available/i)).not.toBeInTheDocument()
+  })
+})

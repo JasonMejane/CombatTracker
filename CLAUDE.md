@@ -70,6 +70,16 @@ update(wanted), destroy }`: a small side-effecting wrapper (injectable for tests
     over the Screen Wake Lock API. Re-requests on `visibilitychange` (browsers drop
     the lock when the page is hidden), releases a lock granted after it stopped being
     wanted, and swallows every refusal.
+  - `version.js` — update detection. Each build stamps `__APP_VERSION__` (Vercel
+    commit SHA, else ISO build time; `define` in `vite.config.js`, declared in
+    `src/vite-env.d.ts`) and emits
+    `/version.json` (never precached; Vercel serves it `no-store`).
+    `fetchLatestVersion` (cache-busted, null on any failure), `isUpdateAvailable`,
+    `watchForUpdate({ current, onAvailable })` (checks on load and on every return to
+    the foreground; returns a stop fn) and `applyUpdate()` (asks the service worker to
+    update, waits for a new worker to take control or turn `redundant`, then reloads —
+    always, within 12 s, whatever fails). Tests run offline: `src/test/setup.js` stubs
+    `fetch` to reject.
 - **`src/components/*.svelte` — presentation.** Stateless where possible; all
   actions flow up through **callback props** (`onAdjustHp`, `onAdd`, …), never
   events or stores.
@@ -88,7 +98,10 @@ Cancel, Escape/backdrop cancel). While `prefs.keepAwake` and combat is running
 (`activeCreatureId !== null`) an `$effect` asks `wakeLock.update(true)`; the header's
 `AwakeToggle` (☀, `aria-pressed`, glows while the lock is actually held) only renders
 when `wakeLock.supported`. On the encounter page the header's `New encounter` button
-sits just left of it (visible text shortened to "New" under 420px). The header tabs are a WAI-ARIA `tablist`
+sits just left of it (visible text shortened to "New" under 420px). When a newer
+build is live, `UpdateBanner` (always-mounted `aria-live` region; Reload / ✕ Dismiss,
+dismissal lasts for the session and returns focus to the active tab) floats in the
+bottom dock above `TurnBar`, so it never pushes the page down. The header tabs are a WAI-ARIA `tablist`
 (`aria-selected`, roving `tabindex`, ←/→ keys) controlling one `tabpanel`. `hpTargetId` opens the
 shared `HpSheet` (numpad bottom sheet: Damage / Heal / Temp HP) for one creature.
 A `view` `$state`
@@ -102,7 +115,7 @@ dock (toast slot + `TurnBar`) renders on both views; `TurnBar` only on the encou
 
 Component tree: `App → CreatureList → CreatureRow → { HpBar, ConditionPicker, EditCreatureForm }`,
 plus `AddCreatureRow`, `InstallButton`, `HpSheet` and a sticky bottom dock
-(`Toast` above `TurnBar`: ◀ previous turn, round + whose turn, ↶ undo, Next turn ▶)
+(`Toast` above `UpdateBanner` above `TurnBar`: ◀ previous turn, round + whose turn, ↶ undo, Next turn ▶)
 for the encounter, and
 `App → CatalogPage → { CatalogRow → { SendToEncounterForm, EditCreatureForm },
 SendPartyForm }` (with `AddCreatureRow` `showInitiative={false}`) for the catalog.

@@ -4,10 +4,28 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Baked into the bundle and published as /version.json so a running app can tell a
+// newer deployment is live (see src/lib/version.js). The commit keeps a same-code
+// Vercel redeploy from prompting a reload; local builds fall back to the build time.
+const APP_VERSION = process.env.VERCEL_GIT_COMMIT_SHA || new Date().toISOString()
+
+/** Emits `version.json` (never precached: workbox only globs js/css/html). */
+const versionFile = () => ({
+  name: 'version-file',
+  apply: 'build',
+  generateBundle() {
+    this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version: APP_VERSION }) })
+  },
+})
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   plugins: [
     svelte(),
+    versionFile(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {

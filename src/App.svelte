@@ -8,6 +8,7 @@
   import TurnBar from './components/TurnBar.svelte'
   import Toast from './components/Toast.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
+  import UpdateBanner from './components/UpdateBanner.svelte'
   import {
     createCreature,
     damage,
@@ -28,6 +29,7 @@
   import { createCatalogCreature, setBaseHp, spawnFromCatalog, spawnGroup } from './lib/catalog.js'
   import { loadState, saveState, loadCatalog, saveCatalog, loadPrefs, savePrefs } from './lib/storage.js'
   import { createWakeLock } from './lib/wakeLock.js'
+  import { watchForUpdate, applyUpdate } from './lib/version.js'
 
   const TOAST_MS = 5000
   const DEATH_SAVE_LABELS = { success: 'success', failure: 'failure', nat1: 'natural 1', nat20: 'natural 20' }
@@ -44,6 +46,7 @@
   let pendingConfirm = $state(null)
   let prefs = $state(loadPrefs())
   let screenAwake = $state(false)
+  let updateNotice = $state('none')
   let toastId = 0
   let toastTimer
 
@@ -58,6 +61,13 @@
   })
   $effect(() => () => wakeLock.destroy())
   $effect(() => () => clearTimeout(toastTimer))
+
+  $effect(() => watchForUpdate({ current: __APP_VERSION__, onAvailable: () => updateNotice === 'none' && (updateNotice = 'available') }))
+
+  function dismissUpdate() {
+    updateNotice = 'dismissed'
+    document.getElementById(`tab-${view}`)?.focus()
+  }
 
   const activeName = $derived(creatures.find((c) => c.id === activeCreatureId)?.name ?? null)
   const hpTarget = $derived(creatures.find((c) => c.id === hpTargetId) ?? null)
@@ -331,6 +341,7 @@
         {/key}
       </div>
     {/if}
+    <UpdateBanner available={updateNotice === 'available'} onReload={() => applyUpdate()} onDismiss={dismissUpdate} />
     {#if view === 'encounter'}
       <TurnBar
         {round}
@@ -459,6 +470,10 @@
   /* Without the turn bar underneath, keep the toast clear of the home indicator. */
   .dock.bare .toast-slot {
     bottom: calc(100% + max(8px, env(safe-area-inset-bottom)));
+  }
+  /* Without the turn bar underneath, keep the update banner clear of the home indicator. */
+  .dock.bare :global(.update-banner) {
+    margin-bottom: max(8px, env(safe-area-inset-bottom));
   }
   .new-encounter:disabled {
     opacity: 0.4;
